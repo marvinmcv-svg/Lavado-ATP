@@ -1,0 +1,279 @@
+// lavadoatp — Pressure Washing Company
+// Schema adapted from the master prompt spec (Step 1) to Prisma + SQLite.
+// SQLite notes: no native uuid/text[]/jsonb/numeric(p,s). We use String (cuid)
+// for ids, Json for jsonb columns, and Float for numeric amounts. CHECK
+// constraints listed in the spec are enforced at the application layer.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ── CORE ──────────────────────────────────────────────────────────────────
+
+model Business {
+  id            String   @id @default(cuid())
+  name          String
+  slug          String   @unique
+  phone         String?
+  address       String?
+  lat           Float?
+  lng           Float?
+  googleMapsUrl String?  @map("google_maps_url")
+  // { mode: 'radius'|'zones', radius_km, center_lat, center_lng, zones: string[] }
+  serviceArea   Json?    @map("service_area")
+  // { mon: { open, close }, ... } — hours per weekday
+  openingHours  Json?    @map("opening_hours")
+  serviceType   String?  @map("service_type")
+  languages     Json?    // string[] e.g. ["es","en"]
+  brandColors   Json?    @map("brand_colors") // { primary, secondary, accent }
+  logoUrl       String?  @map("logo_url")
+  timezone      String   @default("America/La_Paz")
+  currency      String   @default("BOB")
+  instagramUrl  String?  @map("instagram_url")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  siteSettings  SiteSettings?
+  categories    ServiceCategory[]
+  services      Service[]
+  customers     Customer[]
+  bookings      Booking[]
+  leads         Lead[]
+  reviews       Review[]
+  galleryItems  GalleryItem[]
+  staffMembers  StaffMember[]
+  analytics     AnalyticsEvent[]
+  auditLogs     AuditLog[]
+}
+
+model SiteSettings {
+  id                     String   @id @default(cuid())
+  businessId             String   @unique @map("business_id")
+  business               Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  heroHeadlineEs         String   @default("Recupera el brillo de tu propiedad")
+  heroHeadlineEn         String   @default("Restore the shine to your property")
+  heroSubheadlineEs      String   @default("Lavado a presión profesional en Santa Cruz. Resultados que se ven.")
+  heroSubheadlineEn      String   @default("Professional pressure washing in Santa Cruz. Results you can see.")
+  ctaTextEs              String   @default("Cotización Gratis por WhatsApp")
+  ctaTextEn              String   @default("Free Quote on WhatsApp")
+  announcementBarTextEs  String?  @map("announcement_bar_text_es")
+  announcementBarTextEn  String?  @map("announcement_bar_text_en")
+  announcementBarActive  Boolean  @default(false) @map("announcement_bar_active")
+  whatsappGreetingEs     String   @default("Hola, vi su página web y quisiera una cotización...")
+  whatsappGreetingEn     String   @default("Hi, I saw your website and would like a quote...")
+  // { base_prices: {...}, tiers: [{ label, sqm_max, multiplier }] }
+  quoteCalculatorConfig  Json?    @map("quote_calculator_config")
+  gaTrackingId           String?  @map("ga_tracking_id")
+  metaPixelId            String?  @map("meta_pixel_id")
+  updatedAt              DateTime @updatedAt @map("updated_at")
+}
+
+// ── SERVICES ──────────────────────────────────────────────────────────────
+
+model ServiceCategory {
+  id          String    @id @default(cuid())
+  businessId  String    @map("business_id")
+  business    Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  nameEs      String    @map("name_es")
+  nameEn      String    @map("name_en")
+  sortOrder   Int       @default(0) @map("sort_order")
+  active      Boolean   @default(true)
+  services    Service[]
+
+  @@index([businessId])
+}
+
+model Service {
+  id             String           @id @default(cuid())
+  categoryId     String           @map("category_id")
+  category       ServiceCategory  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  businessId     String           @map("business_id")
+  business       Business         @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  nameEs         String           @map("name_es")
+  nameEn         String           @map("name_en")
+  descriptionEs  String           @map("description_es")
+  descriptionEn  String           @map("description_en")
+  // 'fixed' | 'starting_at' | 'quote_only'
+  priceType      String           @default("starting_at") @map("price_type")
+  price          Float?
+  currency       String           @default("BOB")
+  beforePhotoUrl String?          @map("before_photo_url")
+  afterPhotoUrl  String?          @map("after_photo_url")
+  videoUrl       String?          @map("video_url")
+  videoPosterUrl String?          @map("video_poster_url")
+  available      Boolean          @default(true)
+  sortOrder      Int              @default(0) @map("sort_order")
+
+  bookings       Booking[]
+
+  @@index([businessId])
+  @@index([categoryId])
+}
+
+// ── CUSTOMERS & BOOKINGS ──────────────────────────────────────────────────
+
+model Customer {
+  id            String    @id @default(cuid())
+  businessId    String    @map("business_id")
+  business      Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  name          String
+  phone         String
+  email         String?
+  // 'residential' | 'commercial'
+  propertyType  String    @default("residential") @map("property_type")
+  address       String?
+  visitCount    Int       @default(0) @map("visit_count")
+  totalSpend    Float     @default(0) @map("total_spend")
+  tags          Json?     // string[]
+  internalNotes String?   @map("internal_notes")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  bookings      Booking[]
+
+  @@index([businessId])
+  @@index([phone])
+}
+
+model Booking {
+  id               String    @id @default(cuid())
+  businessId       String    @map("business_id")
+  business         Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  customerId       String?   @map("customer_id")
+  customer         Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  customerName     String    @map("customer_name")
+  customerPhone    String    @map("customer_phone")
+  serviceId        String?   @map("service_id")
+  service          Service?  @relation(fields: [serviceId], references: [id], onDelete: SetNull)
+  propertyAddress  String    @map("property_address")
+  propertySizeSqm  Float?    @map("property_size_sqm")
+  scheduledAt      DateTime  @map("scheduled_at")
+  // 'pending' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled'
+  status           String    @default("pending")
+  crewAssigned     String?   @map("crew_assigned")
+  specialRequests  String?   @map("special_requests")
+  quotedAmount     Float?    @map("quoted_amount")
+  depositAmount    Float     @default(0) @map("deposit_amount")
+  depositPaid      Boolean   @default(false) @map("deposit_paid")
+  zone             String?
+  createdAt        DateTime  @default(now()) @map("created_at")
+
+  @@index([businessId])
+  @@index([scheduledAt])
+  @@index([status])
+}
+
+// ── LEADS ─────────────────────────────────────────────────────────────────
+
+model Lead {
+  id          String    @id @default(cuid())
+  businessId  String    @map("business_id")
+  business    Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  // 'whatsapp_widget' | 'contact_form' | 'quote_calculator' | 'direct_call'
+  source      String    @default("whatsapp_widget")
+  name        String?
+  phone       String?
+  email       String?
+  message     String?
+  zone        String?
+  serviceType String?   @map("service_type")
+  propertySize String?  @map("property_size")
+  // 'new' | 'contacted' | 'qualified' | 'converted' | 'closed'
+  status      String    @default("new")
+  assignedTo  String?   @map("assigned_to")
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  @@index([businessId])
+  @@index([status])
+}
+
+// ── ANALYTICS ─────────────────────────────────────────────────────────────
+
+model AnalyticsEvent {
+  id          String    @id @default(cuid())
+  businessId  String    @map("business_id")
+  business    Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  // 'page_view' | 'whatsapp_click' | 'quote_calculator_used' | 'service_section_view' | 'booking_created'
+  eventType   String    @map("event_type")
+  metadata    Json?
+  userAgent   String?   @map("user_agent")
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  @@index([businessId])
+  @@index([eventType])
+  @@index([createdAt])
+}
+
+// ── ADMIN ─────────────────────────────────────────────────────────────────
+
+model StaffMember {
+  id          String    @id @default(cuid())
+  businessId  String    @map("business_id")
+  business    Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  userId      String    @map("user_id")
+  // 'owner' | 'manager' | 'crew'
+  role        String    @default("manager")
+  name        String
+  email       String
+  active      Boolean   @default(true)
+
+  @@index([businessId])
+}
+
+model Review {
+  id              String    @id @default(cuid())
+  businessId      String    @map("business_id")
+  business        Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  source          String    @default("google") // 'google' | 'facebook' | 'manual'
+  reviewerName    String    @map("reviewer_name")
+  starRating      Int       @map("star_rating")
+  reviewText      String    @map("review_text")
+  reviewDate      DateTime  @default(now()) @map("review_date")
+  visibleOnSite   Boolean   @default(true) @map("visible_on_site")
+  flagged         Boolean   @default(false)
+  replyDraft      String?   @map("reply_draft")
+
+  @@index([businessId])
+}
+
+model GalleryItem {
+  id             String    @id @default(cuid())
+  businessId     String    @map("business_id")
+  business       Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  mediaUrl       String    @map("media_url")
+  // 'photo' | 'video'
+  mediaType      String    @default("photo") @map("media_type")
+  // 'instagram' | 'upload'
+  source         String    @default("upload")
+  isBeforeAfter  Boolean   @default(false) @map("is_before_after")
+  pairId         String?   @map("pair_id")
+  pairRole       String?   @map("pair_role") // 'before' | 'after'
+  captionEs      String?   @map("caption_es")
+  captionEn      String?   @map("caption_en")
+  posterUrl      String?   @map("poster_url")
+  serviceId      String?   @map("service_id")
+  sortOrder      Int       @default(0) @map("sort_order")
+  active         Boolean   @default(true)
+
+  @@index([businessId])
+  @@index([isBeforeAfter])
+  @@index([pairId])
+}
+
+model AuditLog {
+  id          String    @id @default(cuid())
+  businessId  String    @map("business_id")
+  business    Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  actorId     String?   @map("actor_id")
+  actorName   String?   @map("actor_name")
+  action      String
+  tableName   String?   @map("table_name")
+  recordId    String?   @map("record_id")
+  oldValue    Json?     @map("old_value")
+  newValue    Json?     @map("new_value")
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  @@index([businessId])
+}

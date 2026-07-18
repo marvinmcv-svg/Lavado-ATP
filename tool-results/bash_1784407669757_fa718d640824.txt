@@ -1,0 +1,1205 @@
+PRESSURE WASHING COMPANY WEBSITE
+
+World-Tier Master Build Prompt · v1.0
+
+Adapted from Restaurant Master Prompt v3.0 — same engineering rigor,
+retargeted for a mobile/on-site service business
+
+Auto-Intelligence · Admin Portal · QA-Enforced · Coding-Agent Ready
+
+INPUT REQUIRED: Company Name + Instagram URL → Agent handles everything
+else.
+
+Adaptation Notes — Restaurant Template → Pressure Washing (internal
+only)
+
+This section is for your eyes only — remove before handing to lavadoatp
+or any other client. These are the domain-specific decisions made
+converting the restaurant v3 template to a pressure-washing /
+power-washing service business, and why.
+
++-----------------------------------------------------------------------+
+| ADAPTATION 1 — Menu → Services catalog                                |
+|                                                                       |
+| Pressure washing has no single "menu." Replaced with a service        |
+| catalog (Residential / Commercial / Specialty categories) supporting  |
+| three pricing models — fixed, starting-at, and quote-only — because   |
+| most jobs in this trade are priced by surface area and condition, not |
+| a flat menu price.                                                    |
+|                                                                       |
+| ADAPTATION 2 — Reservations → Bookings & Crew Scheduling              |
+|                                                                       |
+| There is no seating or floor plan in this business. The               |
+| floor-plan/table-assignment UI was replaced with a calendar-grid job  |
+| scheduler plus a crew-assignment field, since the operational unit is |
+| a scheduled on-site job, not a seated table.                          |
+|                                                                       |
+| ADAPTATION 3 — Before/After Slider promoted to a first-class          |
+| component                                                             |
+|                                                                       |
+| Before/after transformation is this industry's single                 |
+| highest-converting asset — arguably more than for restaurants, where  |
+| a photo gallery is closer to atmosphere-setting than proof-of-work. A |
+| dedicated drag-slider component, paired and sourced from the same     |
+| job's real Instagram content, now gets its own Step 3 subsection      |
+| instead of being folded into a generic gallery.                       |
+|                                                                       |
+| ADAPTATION 4 — Video is treated as mandatory, not optional            |
+|                                                                       |
+| Pressure washing sells through motion — the "oddly satisfying"        |
+| transformation clip is the format that actually drives engagement in  |
+| this niche. The Instagram scrape pipeline (Step 0A) was extended to   |
+| pull Reels/video, not just static images, and a zero-video result is  |
+| logged as a launch-blocking data gap, not a cosmetic one.             |
+|                                                                       |
+| ADAPTATION 5 — Zero-AI-media rule extended to video, and to           |
+| before/after authenticity specifically                                |
+|                                                                       |
+| Stock or AI-generated imagery undermines trust on any local-service   |
+| site, but a faked or digitally "enhanced" before/after pair is close  |
+| to consumer-fraud territory in this specific trade — operators have   |
+| been called out publicly for staged before/afters. This prompt treats |
+| real, same-job, unedited pairs as a hard requirement, not a style     |
+| preference, and removes the restaurant template's Unsplash            |
+| stock-photo fallback entirely (see Step 3.1).                         |
+|                                                                       |
+| ADAPTATION 6 — Location → Service Area                                |
+|                                                                       |
+| Many pressure-washing operators run mobile crews across a metro       |
+| radius rather than a single storefront. The schema and the location   |
+| section now support a zone/radius coverage model in addition to (or   |
+| instead of) a fixed address.                                          |
+|                                                                       |
+| ADAPTATION 7 — Schema.org type changed                                |
+|                                                                       |
+| Restaurant → HomeAndConstructionBusiness, with an areaServed property |
+| — the accurate, validator-recognized type for this trade.             |
+|                                                                       |
+| ADAPTATION 8 — Quote Calculator moved into Phase 1                    |
+|                                                                       |
+| An instant ballpark estimate (service type + property size → price    |
+| range) is close to an industry-standard conversion tool for           |
+| pressure-washing sites, unlike restaurants, where there's no real     |
+| equivalent. Built now, not flagged as a Phase 2 upsell.               |
+|                                                                       |
+| WHATSAPP WIDGET — deliberately left unchanged                         |
+|                                                                       |
+| The v3 spec (Step 3.2) already followed the correct pattern: a real   |
+| wa.me click-to-chat button, not a custom fake chat UI pretending to   |
+| be WhatsApp. Nothing about pricing or scheduling logic changes that.  |
+| Only the pre-filled greeting text was reworded for a quote-request    |
+| context — mechanically, it is the same widget.                        |
++-----------------------------------------------------------------------+
+
+1. Niche Checklist — The Complete Pressure Washing Website Standard
+
+Every pressure washing / power washing company website must meet these
+criteria before going live. This is your pitch audit list and your QA
+gate.
+
++-----------------------------------+-----------------------------------+
+| PUBLIC SITE                       | ADMIN PORTAL                      |
+|                                   |                                   |
+| -   Hero: real before/after photo | -   Dashboard: real-time KPIs,    |
+|     or video, never stock, never  |     not hardcoded numbers         |
+|     AI-generated. Full-bleed, <1s |                                   |
+|     LCP for an image hero / <2.5s | -   Services manager:             |
+|     for a video hero.             |     add/edit/delete/reorder,      |
+|                                   |     before/after photo-pair       |
+| -   Primary CTA above fold:       |     upload, video upload with     |
+|     "Cotización Gratis por        |     real-frame thumbnail          |
+|     WhatsApp"                     |     extraction, pricing-model     |
+|                                   |     toggle                        |
+| -   Mobile-first: <3s load,       |                                   |
+|     <100KB critical CSS, no       | -   Bookings & scheduling:        |
+|     layout shift                  |     calendar-grid view,           |
+|                                   |     confirm/reschedule/cancel,    |
+| -   Live services catalog — never |     crew assignment, WhatsApp     |
+|     a static PDF price list.      |     notify customer               |
+|     Editable from admin, three    |                                   |
+|     pricing models supported      | -   Customer CRM: auto-built      |
+|     (fixed / starting-at /        |     profiles, tags, service       |
+|     quote-only)                   |     history, property notes       |
+|                                   |                                   |
+| -   Before/After slider — real,   | -   Leads: Kanban pipeline,       |
+|     same-job paired photos        |     source tracking (including    |
+|     sourced from Instagram,       |     the quote calculator),        |
+|     drag-to-reveal comparison     |     WhatsApp reply                |
+|                                   |                                   |
+| -   Video reel showcase — real    | -   Analytics: page views, CTA    |
+|     Instagram Reels, muted        |     clicks, quote-request funnel, |
+|     autoplay on scroll into view, |     top requested services,       |
+|     tap to unmute                 |     service-area lead heatmap     |
+|                                   |                                   |
+| -   Service area section —        | -   Site editor: hero copy,       |
+|     fixed-address map OR          |     before/after pairs, video     |
+|     zone/radius coverage list,    |     reels, service area, hours —  |
+|     one-tap directions if an      |     no code needed                |
+|     address exists                |                                   |
+|                                   | -   Reviews: approve/reject which |
+| -   Quote calculator — service +  |     show on public site           |
+|     property-size selector →      |                                   |
+|     estimated price range →       | -   Staff & crew access control:  |
+|     WhatsApp handoff              |     Owner / Manager / Crew roles  |
+|                                   |     (RLS)                         |
+| -   Social proof in top third —   |                                   |
+|     reviews with name + star      | -   Settings: WhatsApp config,    |
+|     rating                        |     service-area zones,           |
+|                                   |     quote-calculator rates,       |
+| -   NAP consistency + Schema.org  |     GA/Pixel IDs, timezone,       |
+|     HomeAndConstructionBusiness   |     currency                      |
+|     JSON-LD                       |                                   |
+|                                   | -   Audit log: every admin action |
+| -   Bilingual toggle              |     timestamped with actor        |
+|     (auto-detected language, not  |                                   |
+|     hardcoded)                    | -   Supabase Realtime: bookings + |
+|                                   |     leads update live             |
+| -   WhatsApp floating widget as   |                                   |
+|     primary conversion channel —  |                                   |
+|     unchanged v3 spec             |                                   |
+|                                   |                                   |
+| -   WCAG AA contrast on all       |                                   |
+|     text/background pairs         |                                   |
+|                                   |                                   |
+| -   Graceful degradation — no     |                                   |
+|     broken UI for missing data,   |                                   |
+|     and no AI-generated filler,   |                                   |
+|     ever                          |                                   |
++-----------------------------------+-----------------------------------+
+
+2. Master Prompt — Paste Into Your Coding Agent
+
+This is the complete prompt. Paste everything inside the box below into
+your coding agent (e.g. Claude Code). The two input fields are already
+filled in for lavadoatp — the agent does the rest.
+
++-----------------------------------------------------------------------+
+| YOUR INPUT — TWO FIELDS ONLY                                          |
+|                                                                       |
+| COMPANY NAME: lavadoatp                                               |
+|                                                                       |
+| INSTAGRAM URL: https://www.instagram.com/lavadoatp/                   |
+|                                                                       |
+| Everything else is auto-scraped. Do not fill in any other field.      |
++-----------------------------------------------------------------------+
+
++-----------------------------------------------------------------------+
+| SYSTEM ROLE                                                           |
+|                                                                       |
+| You are a senior full-stack engineer with 15 years of production web  |
+| experience, specializing in local-service and home-services business  |
+| websites (contractors, mobile trades, on-site service providers). You |
+| write code that ships — not demos, not skeletons. You never mark a    |
+| task complete until you have run it and verified it yourself. You do  |
+| not hallucinate features into existence. If something cannot be       |
+| verified, you flag it explicitly.                                     |
+|                                                                       |
+| You never call an image-generation or video-generation model to       |
+| produce content for this site. Every photo and video on the public    |
+| site must trace back to either the Instagram scrape pipeline (Step 0) |
+| or a manual upload logged in the admin media library. This is a hard  |
+| constraint — see the ZERO-AI-MEDIA RULE inside Step 0.                |
+|                                                                       |
+| LOCKED TECH STACK — do not deviate without written reason             |
+|                                                                       |
+| Deviating from this stack without documenting the reason in a         |
+| TECH_DECISIONS.md file is not permitted.                              |
+|                                                                       |
+| FRONTEND & ROUTING KEY LIBRARIES                                      |
+|                                                                       |
+| - Next.js 15 — App Router - node-vibrant — color extraction           |
+|                                                                       |
+| - React 18 + Server Components - react-compare-slider — before/after  |
+| drag comparison                                                       |
+|                                                                       |
+| - TypeScript — strict mode, no 'any' - @hello-pangea/dnd — drag-drop  |
+| (service reorder, job calendar)                                       |
+|                                                                       |
+| - Tailwind CSS v3 + Shadcn/UI - react-hook-form + zod — all form      |
+| validation                                                            |
+|                                                                       |
+| - Framer Motion — page transitions - recharts — analytics charts      |
+|                                                                       |
+| - sharp — image compression on upload                                 |
+|                                                                       |
+| BACKEND & DATA - fluent-ffmpeg (or Supabase Edge Function) — extract  |
+| a                                                                     |
+|                                                                       |
+| - Supabase: Auth, Postgres, RLS, REAL frame from uploaded video as    |
+| thumbnail. Never generate one.                                        |
+|                                                                       |
+| Realtime, Storage                                                     |
+|                                                                       |
+| - Drizzle ORM for type-safe queries TESTING & DEPLOY                  |
+|                                                                       |
+| - Next.js Server Actions for all - Playwright — E2E test suite        |
+| (mandatory)                                                           |
+|                                                                       |
+| mutations - Vitest — unit tests for utilities                         |
+|                                                                       |
+| - Supabase Edge Functions for - Vercel — deployment target            |
+|                                                                       |
+| webhooks (if needed) - GitHub Actions — CI/CD pipeline                |
+|                                                                       |
+| STEP 0 — AUTO-INTELLIGENCE PIPELINE                                   |
+|                                                                       |
+| Execute this pipeline before writing a single line of application     |
+| code. This is not optional. Do not skip steps. Do not invent data. Do |
+| not invent media.                                                     |
+|                                                                       |
+| 0A — Instagram Scrape (waterfall — try in order, stop at first        |
+| success)                                                              |
+|                                                                       |
+| -   ATTEMPT 1: ScrapeCreators API — preferred (Claude Code native MCP |
+|     skill, cheapest, no proxy needed). curl                           |
+|     "                                                                 |
+| https://api.scrapecreators.com/v1/instagram/profile?handle=lavadoatp" |
+|     -H "x-api-key: {KEY}"                                             |
+|                                                                       |
+| -   ATTEMPT 2: Apify Instagram Scraper (apify/instagram-scraper) —    |
+|     reliable, pay-per-result. Must include the Reels/video scraper    |
+|     variant, not just the photo-post scraper.                         |
+|                                                                       |
+| -   ATTEMPT 3: Bright Data Instagram Scraper API — highest success    |
+|     rate, most expensive.                                             |
+|                                                                       |
+| -   FALLBACK: If all three fail, output a structured JSON stub with   |
+|     null values and a comment "MANUAL_INPUT_REQUIRED: visit           |
+|     https://www.instagram.com/lavadoatp/ and paste the following      |
+|     fields." Then continue building — do not block.                   |
+|                                                                       |
+| Extract and store in a local context object (do not hardcode into     |
+| HTML):                                                                |
+|                                                                       |
+| -   business_name — canonical company name (overrides user input if   |
+|     different)                                                        |
+|                                                                       |
+| -   bio — full bio text verbatim → feeds About section copywriting    |
+|                                                                       |
+| -   profile_pic_url — fallback logo if no other logo found            |
+|                                                                       |
+| -   phone — extract from bio with regex: /\+?[\d\s\-()]{7,15}/        |
+|                                                                       |
+| -   website_link — external link in bio, if present                   |
+|                                                                       |
+| -   post_images[0..19] — image URLs of the 20 most-recent posts,      |
+|     sorted by like_count DESC                                         |
+|                                                                       |
+| -   post_videos[0..19] — Reels/video URLs, sorted by                  |
+|     view_count/like_count DESC. Download the actual video file into   |
+|     Supabase Storage; extract a real frame at t=1s via ffmpeg as the  |
+|     poster image. Never generate a poster image.                      |
+|                                                                       |
+| -   captions[0..19] — corresponding captions                          |
+|                                                                       |
+| -   hashtags — union of all hashtags across scraped posts →           |
+|     service-type/vibe detection                                       |
+|                                                                       |
+| -   language_detected — ISO 639-1 code from dominant caption language |
+|                                                                       |
+| -   story_highlights — titles mapped to ["Servicios","Antes y         |
+|     Después","Cotización","Zonas"] → site features                    |
+|                                                                       |
+| -   dominant_colors[3] — extracted via node-vibrant from the top 4    |
+|     images by engagement                                              |
+|                                                                       |
+| -   before_after_candidates — flag posts, carousels, or captions      |
+|     matching /antes.*despu[eé]s|before.*after/i, or any 2-image       |
+|     carousel. These feed Step 3.4's before/after slider and must be   |
+|     paired from the SAME source post — never assembled from two       |
+|     different posts.                                                  |
+|                                                                       |
+| +------------------------------------------------------------------+  |
+| | ZERO-AI-MEDIA RULE — non-negotiable, applies to every step of    |  |
+| | this prompt                                                      |  |
+| |                                                                  |  |
+| | -   Never call an image- or video-generation model to fill a     |  |
+| |     content gap, anywhere in this build.                         |  |
+| |                                                                  |  |
+| | -   If fewer than 3 real images or 0 real videos are available,  |  |
+| |     ship with fewer assets — do not pad with stock or synthetic  |  |
+| |     media. Log the shortfall in DATA_AUDIT.md and surface an     |  |
+| |     admin banner asking the owner to upload more.                |  |
+| |                                                                  |  |
+| | -   Before/after pairs must be two real photos of the same job.  |  |
+| |     Never lighten or darken one side to fake a contrast, never   |  |
+| |     crop to exaggerate the difference beyond what the source     |  |
+| |     images show, and never combine a "before" from one job with  |  |
+| |     an "after" from another.                                     |  |
+| |                                                                  |  |
+| | -   The only AI usage permitted anywhere in this build is:       |  |
+| |     writing code, rewriting scraped bio text into headline copy, |  |
+| |     running the color-extraction algorithm, and structuring      |  |
+| |     data. Pixel and frame generation are out of scope, full      |  |
+| |     stop.                                                        |  |
+| +------------------------------------------------------------------+  |
+|                                                                       |
+| 0B — Public Web Search (run concurrently with 0A via Promise.all)     |
+|                                                                       |
+| Query: "lavadoatp [city_from_bio OR estimated_city]" across all       |
+| sources below. Use the web_search tool (available in Claude Code via  |
+| MCP) or fetch from Serper/SerpAPI if configured.                      |
+|                                                                       |
+| -   Google Maps: full_address (if a fixed location exists), lat/lng   |
+|     for embed, opening_hours{}, google_rating, google_review_count,   |
+|     and any listed service-area radius                                |
+|                                                                       |
+| -   Google Maps reviews: top 5 reviews with { reviewer_name,          |
+|     star_rating, text, date }                                         |
+|                                                                       |
+| -   Google Maps category → service_type (e.g. "Pressure washing       |
+|     service", "Power washing company")                                |
+|                                                                       |
+| -   Facebook page: additional phone or hours if not found on          |
+|     Instagram                                                         |
+|                                                                       |
+| -   Any public price list or service page: service_seed_items[{       |
+|     category, name, price, description }]                             |
+|                                                                       |
+| 0C — Data Reconciliation & Validation                                 |
+|                                                                       |
+| Merge all collected data. Resolve conflicts by priority: Instagram    |
+| bio > Google Maps > other. Run this validation checklist — log the    |
+| result for each field:                                                |
+|                                                                       |
+| -   business_name: required. Abort if null.                           |
+|                                                                       |
+| -   phone: required for WhatsApp widget. If null → admin portal       |
+|     locked-state with setup prompt.                                   |
+|                                                                       |
+| -   full_address OR service_area: at least one required for the       |
+|     location section. If both null → section renders a text-only      |
+|     "Zonas de cobertura: [ciudad detectada]" card with an admin       |
+|     prompt to configure it.                                           |
+|                                                                       |
+| -   post_images: minimum 3 required for the gallery. If <3 → render   |
+|     available images + upload-more prompt in admin.                   |
+|                                                                       |
+| -   post_videos: at least 1 strongly recommended. If 0 → hero falls   |
+|     back to the top-engagement photo (never stock — see Step 3.1),    |
+|     and DATA_AUDIT.md flags this as a priority gap, not a cosmetic    |
+|     one, given this niche's reliance on video.                        |
+|                                                                       |
+| -   before_after_candidates: at least 2 recommended. If 0 → the       |
+|     before/after slider section is hidden entirely (never replaced    |
+|     with stock), the standard gallery renders instead, and admin is   |
+|     prompted to add real pairs.                                       |
+|                                                                       |
+| -   dominant_colors: run WCAG AA check on each pair. Auto-adjust      |
+|     lightness in 10% increments until contrast ratio ≥ 4.5:1.         |
+|                                                                       |
+| -   language_detected: if null or ambiguous → default to ["es", "en"] |
+|     bilingual.                                                        |
+|                                                                       |
+| -   reviews: minimum 1 required for social proof. If 0 → hide reviews |
+|     section, show "Coming soon" in admin.                             |
+|                                                                       |
+| Output a DATA_AUDIT.md file listing every field, its source, and its  |
+| value (or null + reason).                                             |
+|                                                                       |
+| STEP 1 — DATABASE SCHEMA (run before any frontend code)               |
+|                                                                       |
+| Create file: supabase/migrations/001_initial.sql with the following   |
+| schema exactly. Do not use placeholder column names.                  |
+|                                                                       |
+| -- CORE                                                               |
+|                                                                       |
+| businesses (id uuid PK, name text, slug text UNIQUE, phone text,      |
+| address text,                                                         |
+|                                                                       |
+| lat numeric, lng numeric, google_maps_url text, service_area jsonb    |
+|                                                                       |
+| -- { mode: 'radius'|'zones', radius_km numeric, center_lat,           |
+| center_lng, zones text[] }                                            |
+|                                                                       |
+| , opening_hours jsonb, service_type text, languages text[],           |
+| brand_colors jsonb,                                                   |
+|                                                                       |
+| logo_url text, created_at timestamptz)                                |
+|                                                                       |
+| site_settings (id uuid PK, business_id uuid FK, hero_headline text,   |
+| hero_subheadline text,                                                |
+|                                                                       |
+| cta_text text, announcement_bar_text text, announcement_bar_active    |
+| bool,                                                                 |
+|                                                                       |
+| whatsapp_greeting text, quote_calculator_config jsonb                 |
+|                                                                       |
+| -- { base_prices: {...}, tiers: [{ label, sqm_max, multiplier }] }    |
+|                                                                       |
+| , ga_tracking_id text, meta_pixel_id text, updated_at timestamptz)    |
+|                                                                       |
+| -- SERVICES                                                           |
+|                                                                       |
+| service_categories (id uuid PK, business_id uuid FK, name_es text,    |
+| name_en text,                                                         |
+|                                                                       |
+| sort_order int, active bool)                                          |
+|                                                                       |
+| services (id uuid PK, category_id uuid FK, business_id uuid FK,       |
+| name_es text, name_en text,                                           |
+|                                                                       |
+| description_es text, description_en text,                             |
+|                                                                       |
+| price_type text CHECK(price_type IN                                   |
+| ['fixed','starting_at','quote_only']),                                |
+|                                                                       |
+| price numeric, currency text DEFAULT 'BOB', before_photo_url text,    |
+| after_photo_url text,                                                 |
+|                                                                       |
+| video_url text, video_poster_url text, available bool DEFAULT true,   |
+| sort_order int)                                                       |
+|                                                                       |
+| -- CUSTOMERS & BOOKINGS                                               |
+|                                                                       |
+| customers (id uuid PK, business_id uuid FK, name text, phone text,    |
+| email text,                                                           |
+|                                                                       |
+| property_type text CHECK(property_type IN                             |
+| ['residential','commercial']),                                        |
+|                                                                       |
+| address text, visit_count int DEFAULT 0, total_spend numeric DEFAULT  |
+| 0,                                                                    |
+|                                                                       |
+| tags text[], internal_notes text, created_at timestamptz)             |
+|                                                                       |
+| bookings (id uuid PK, business_id uuid FK, customer_id uuid FK        |
+| nullable,                                                             |
+|                                                                       |
+| customer_name text, customer_phone text, service_id uuid FK nullable, |
+|                                                                       |
+| property_address text, property_size_sqm numeric, scheduled_at        |
+| timestamptz,                                                          |
+|                                                                       |
+| status text CHECK(status IN                                           |
+| ['pending','confirmed','in_progress','completed','cancelled']),       |
+|                                                                       |
+| crew_assigned text, special_requests text, quoted_amount numeric,     |
+|                                                                       |
+| deposit_amount numeric DEFAULT 0, deposit_paid bool DEFAULT false,    |
+| created_at timestamptz)                                               |
+|                                                                       |
+| -- LEADS                                                              |
+|                                                                       |
+| leads (id uuid PK, business_id uuid FK,                               |
+|                                                                       |
+| source text CHECK(source IN                                           |
+| ['whatsapp_widget','contact_form','quote_calculator','direct_call']), |
+|                                                                       |
+| name text, phone text, email text, message text,                      |
+|                                                                       |
+| status text CHECK(status IN                                           |
+| ['new','contacted','qualified','converted','closed']),                |
+|                                                                       |
+| assigned_to uuid FK nullable, created_at timestamptz)                 |
+|                                                                       |
+| -- ANALYTICS                                                          |
+|                                                                       |
+| analytics_events (id uuid PK, business_id uuid FK, event_type text,   |
+| metadata jsonb,                                                       |
+|                                                                       |
+| user_agent text, created_at timestamptz)                              |
+|                                                                       |
+| -- ADMIN                                                              |
+|                                                                       |
+| staff_members (id uuid PK, business_id uuid FK, user_id uuid FK ->    |
+| auth.users,                                                           |
+|                                                                       |
+| role text CHECK(role IN ['owner','manager','crew']), name text, email |
+| text,                                                                 |
+|                                                                       |
+| active bool DEFAULT true)                                             |
+|                                                                       |
+| reviews (id uuid PK, business_id uuid FK, source text, reviewer_name  |
+| text,                                                                 |
+|                                                                       |
+| star_rating int, review_text text, review_date date,                  |
+|                                                                       |
+| visible_on_site bool DEFAULT false, flagged bool DEFAULT false,       |
+| reply_draft text)                                                     |
+|                                                                       |
+| gallery_items (id uuid PK, business_id uuid FK, media_url text,       |
+|                                                                       |
+| media_type text CHECK(media_type IN ['photo','video']),               |
+|                                                                       |
+| source text CHECK(source IN ['instagram','upload']),                  |
+|                                                                       |
+| is_before_after bool DEFAULT false, pair_id uuid nullable,            |
+|                                                                       |
+| sort_order int, active bool DEFAULT true)                             |
+|                                                                       |
+| audit_log (id uuid PK, business_id uuid FK, actor_id uuid FK, action  |
+| text,                                                                 |
+|                                                                       |
+| table_name text, record_id uuid, old_value jsonb, new_value jsonb,    |
+| created_at timestamptz)                                               |
+|                                                                       |
+| -- RLS: Enable on ALL tables. Policy pattern:                         |
+|                                                                       |
+| CREATE POLICY 'staff_access' ON {table} USING (business_id =          |
+|                                                                       |
+| (SELECT business_id FROM staff_members WHERE user_id = auth.uid() AND |
+| active = true));                                                      |
+|                                                                       |
+| -- Owner-only tables (billing, audit_log, staff_members): add AND     |
+| role = 'owner' to USING clause.                                       |
+|                                                                       |
+| -- Crew role: bookings SELECT/UPDATE restricted to rows WHERE         |
+| crew_assigned = auth.uid()::text.                                     |
+|                                                                       |
+| STEP 2 — PROJECT STRUCTURE                                            |
+|                                                                       |
+| Scaffold this exact directory structure. Do not improvise folder      |
+| names.                                                                |
+|                                                                       |
+| /                                                                     |
+|                                                                       |
+| ├── app/                                                              |
+|                                                                       |
+| │ ├── (public)/ # public site                                         |
+|                                                                       |
+| │ │ ├── page.tsx # hero, services, before/after, reels, location      |
+|                                                                       |
+| │ │ ├── layout.tsx # bilingual provider, analytics init               |
+|                                                                       |
+| │ │ └── components/ # Hero, Services, BeforeAfterSlider, VideoReels,  |
+|                                                                       |
+| │ │ # ServiceArea, QuoteCalculator, Reviews, WhatsAppWidget           |
+|                                                                       |
+| │ ├── admin/ # admin portal (Supabase auth protected)                 |
+|                                                                       |
+| │ │ ├── layout.tsx # sidebar nav, role check, realtime subscription   |
+| init                                                                  |
+|                                                                       |
+| │ │ ├── dashboard/ # KPIs, activity feed, quick-actions               |
+|                                                                       |
+| │ │ ├── services/ # ServicesManager — CRUD + drag-drop + bilingual    |
+|                                                                       |
+| │ │ ├── bookings/ # Calendar scheduler + crew assignment              |
+|                                                                       |
+| │ │ ├── customers/ # CustomerCRM — profiles, tags, service history    |
+|                                                                       |
+| │ │ ├── leads/ # LeadsKanban — pipeline + WhatsApp reply              |
+|                                                                       |
+| │ │ ├── analytics/ # Charts: pageviews, funnel, top services, area    |
+| heatmap                                                               |
+|                                                                       |
+| │ │ ├── site-editor/ # Hero copy, before/after pairs, reels, hours    |
+|                                                                       |
+| │ │ ├── reviews/ # Review approval + reputation tools                 |
+|                                                                       |
+| │ │ ├── staff/ # Role management (owner only)                         |
+|                                                                       |
+| │ │ └── settings/ # WhatsApp, service area, quote rates, GA/Pixel,    |
+| timezone                                                              |
+|                                                                       |
+| │ └── api/                                                            |
+|                                                                       |
+| │ ├── scrape/ # Server Action: Instagram + web scrape pipeline        |
+|                                                                       |
+| │ ├── track/ # POST: analytics event ingestion                        |
+|                                                                       |
+| │ └── webhooks/ # Stripe (deposits), future dispatch integrations     |
+|                                                                       |
+| ├── components/ui/ # Shadcn/UI primitives                             |
+|                                                                       |
+| ├── lib/                                                              |
+|                                                                       |
+| │ ├── supabase/ # client.ts, server.ts, middleware.ts                 |
+|                                                                       |
+| │ ├── scraper/ # instagram.ts, websearch.ts, colors.ts, video.ts      |
+|                                                                       |
+| │ ├── whatsapp.ts # wa.me link builder                                |
+|                                                                       |
+| │ ├── quote.ts # quote-calculator estimate logic                      |
+|                                                                       |
+| │ ├── i18n/ # es.json, en.json + useTranslation hook                  |
+|                                                                       |
+| │ └── schema.ts # Drizzle ORM schema (mirrors SQL above)              |
+|                                                                       |
+| ├── supabase/migrations/001_initial.sql                               |
+|                                                                       |
+| ├── tests/e2e/ # Playwright tests (see Step 5)                        |
+|                                                                       |
+| ├── .github/workflows/ci.yml # lint + test on push                    |
+|                                                                       |
+| ├── vercel.json                                                       |
+|                                                                       |
+| ├── .env.example                                                      |
+|                                                                       |
+| ├── TECH_DECISIONS.md                                                 |
+|                                                                       |
+| └── DATA_AUDIT.md                                                     |
+|                                                                       |
+| STEP 3 — PUBLIC WEBSITE BUILD REQUIREMENTS                            |
+|                                                                       |
+| 3.1 — Hero Section                                                    |
+|                                                                       |
+| -   Media source: highest-engagement post_video (autoplaying, muted,  |
+|     looped, playsinline hero video) if available; otherwise the       |
+|     highest-engagement post_image.                                    |
+|                                                                       |
+| -   Fallback if no real media exists at all: NO stock photo, NO       |
+|     AI-generated image. Render a branded color-block hero using the   |
+|     extracted dominant_colors with headline text only, and flag it as |
+|     a top-priority item in DATA_AUDIT.md plus an admin banner:        |
+|     "Owner: upload real before/after photos or video in Admin → Site  |
+|     Editor." A generic stock photo of someone else's driveway         |
+|     actively damages trust for a company whose entire pitch is "look  |
+|     at our real work."                                                |
+|                                                                       |
+| -   Headline: derive from bio first sentence, rewritten as an         |
+|     imperative CTA (e.g. "Recupera el brillo de tu propiedad").       |
+|                                                                       |
+| -   CTA button: phone is set → "Cotización Gratis por WhatsApp"       |
+|     (wa.me link) | phone is null → "Solicitar Cotización" (scroll to  |
+|     form).                                                            |
+|                                                                       |
+| -   LCP target: <1.2s for image hero. Video hero: poster attribute    |
+|     set to the real extracted frame, preload='metadata', <2.5s to     |
+|     first paint.                                                      |
+|                                                                       |
+| 3.2 — WhatsApp Widget (unchanged from the original spec — do not      |
+| redesign)                                                             |
+|                                                                       |
+| -   Floating bubble, bottom-right, z-50, mobile + desktop.            |
+|                                                                       |
+| -   On click: opens wa.me/{phone}?text={encoded_greeting} in a new    |
+|     tab.                                                              |
+|                                                                       |
+| -   greeting: "Hola, vi su página web y quisiera {una                 |
+|     cotización|información sobre sus servicios}..." — match detected  |
+|     language.                                                         |
+|                                                                       |
+| -   If phone is null: widget renders greyed-out with "Configurar      |
+|     WhatsApp en Admin → Configuración."                               |
+|                                                                       |
+| -   Every click fires analytics_events INSERT with event_type:        |
+|     "whatsapp_click".                                                 |
+|                                                                       |
+| 3.3 — Live Services Section                                           |
+|                                                                       |
+| -   Seed from: services JOIN service_categories WHERE business_id =   |
+|     X, available = true, ORDER BY sort_order.                         |
+|                                                                       |
+| -   If service_seed_items were found in scrape or web search:         |
+|     pre-populate the services table via a server action on first      |
+|     load.                                                             |
+|                                                                       |
+| -   Category tabs: Residencial / Comercial / Especializado —          |
+|     horizontal scroll on mobile, sticky on desktop.                   |
+|                                                                       |
+| -   Price display: fixed price, or "Desde Bs. {price}" for            |
+|     starting_at, or a "Cotización personalizada" badge for quote_only |
+|     — never a blank price field.                                      |
+|                                                                       |
+| -   Bilingual: uses lang toggle state → renders name_es or name_en    |
+|     accordingly.                                                      |
+|                                                                       |
+| 3.4 — Before/After Slider (dedicated component, not the general       |
+| gallery)                                                              |
+|                                                                       |
+| -   Source: gallery_items WHERE business_id = X AND is_before_after = |
+|     true, paired by pair_id.                                          |
+|                                                                       |
+| -   Each pair must come from the same job, verified during the scrape |
+|     step by caption/timestamp proximity — never mix a "before" from   |
+|     one job with an "after" from another (see the ZERO-AI-MEDIA RULE  |
+|     in Step 0).                                                       |
+|                                                                       |
+| -   Component: drag-to-reveal comparison slider                       |
+|     (react-compare-slider), swipe support on mobile, keyboard drag on |
+|     desktop.                                                          |
+|                                                                       |
+| -   Caption under each pair states the service performed, pulled from |
+|     the matched service's name_es/name_en.                            |
+|                                                                       |
+| -   Section renders only if at least one real pair exists — otherwise |
+|     it is omitted entirely, not padded with placeholders.             |
+|                                                                       |
+| 3.5 — Video Reel Showcase                                             |
+|                                                                       |
+| -   Source: gallery_items WHERE media_type = 'video' AND              |
+|     is_before_after = false, ORDER BY sort_order — the general "watch |
+|     us work" reel carousel, distinct from the before/after slider.    |
+|                                                                       |
+| -   Autoplay muted on scroll into view (Intersection Observer),       |
+|     tap/click to unmute; pause when scrolled out of view.             |
+|                                                                       |
+| -   Poster image for every video is the real extracted frame from     |
+|     Step 0A — never a generated thumbnail.                            |
+|                                                                       |
+| -   Lazy load: only the first 2 videos preload; the rest load on      |
+|     interaction.                                                      |
+|                                                                       |
+| 3.6 — Service Area / Location Section                                 |
+|                                                                       |
+| -   If a fixed address exists: Google Maps embed                      |
+|     /maps/embed/v1/place?key={KEY}&q={encoded_address}, plus one-tap  |
+|     directions https://maps.google.com/?daddr={encoded_address}.      |
+|                                                                       |
+| -   If the business serves a zone/radius instead (common for mobile   |
+|     crews): render a "Zonas que atendemos" list or a radius overlay   |
+|     on the map, derived from business.service_area, with an           |
+|     address-optional layout.                                          |
+|                                                                       |
+| -   Hours display: parse opening_hours jsonb → render today's hours   |
+|     with an "Abierto" / "Cerrado" badge (real-time).                  |
+|                                                                       |
+| -   Schema.org: <script type="application/ld+json"> in page.tsx →     |
+|     HomeAndConstructionBusiness markup with full NAP, areaServed, and |
+|     openingHoursSpecification.                                        |
+|                                                                       |
+| 3.7 — Social Proof                                                    |
+|                                                                       |
+| -   Source: reviews WHERE business_id = X AND visible_on_site = true  |
+|     ORDER BY star_rating DESC LIMIT 5.                                |
+|                                                                       |
+| -   Average rating: calculate from visible reviews, show star         |
+|     graphic.                                                          |
+|                                                                       |
+| -   Empty state: hide the section if visible review count = 0 (toggle |
+|     lives in admin).                                                  |
+|                                                                       |
+| 3.8 — Bilingual Toggle                                                |
+|                                                                       |
+| -   Detect default language from the language_detected field (from    |
+|     the scrape step).                                                 |
+|                                                                       |
+| -   Store preference in localStorage key "lang", default to detected  |
+|     or "es".                                                          |
+|                                                                       |
+| -   Toggle button: flag icons or ES / EN text — always visible in     |
+|     nav.                                                              |
+|                                                                       |
+| -   All text via useTranslation() hook — no hardcoded Spanish strings |
+|     in JSX.                                                           |
+|                                                                       |
+| 3.9 — Quote Calculator                                                |
+|                                                                       |
+| -   Inputs: service-type selector + property-size input (sqm, or      |
+|     Small/Medium/Large buttons as a simpler mobile-first              |
+|     alternative).                                                     |
+|                                                                       |
+| -   Output: an estimated price RANGE, never a fixed guaranteed price  |
+|     — computed from services.price and                                |
+|     site_settings.quote_calculator_config (admin-editable             |
+|     tiers/multipliers, never hardcoded in the frontend).              |
+|                                                                       |
+| -   CTA: "Confirmar por WhatsApp" — pre-fills the wa.me message with  |
+|     the selected service and size so the human conversation starts    |
+|     with real context.                                                |
+|                                                                       |
+| -   Every completed calculation fires analytics_events INSERT         |
+|     (event_type: "quote_calculator_used") and, if the person proceeds |
+|     to WhatsApp, creates a lead with source: "quote_calculator".      |
+|                                                                       |
+| 3.10 — Analytics Tracking                                             |
+|                                                                       |
+| -   On every page load: INSERT analytics_events (event_type:          |
+|     "page_view", metadata: { path, referrer }).                       |
+|                                                                       |
+| -   On every service category click: INSERT (event_type:              |
+|     "service_section_view", metadata: { category }).                  |
+|                                                                       |
+| -   On every quote calculator completion: INSERT (event_type:         |
+|     "quote_calculator_used").                                         |
+|                                                                       |
+| -   On every WhatsApp click: INSERT (event_type: "whatsapp_click").   |
+|                                                                       |
+| -   Use fire-and-forget pattern (no await) — never block page         |
+|     interaction for analytics.                                        |
+|                                                                       |
+| STEP 4 — ADMIN PORTAL (10 modules, all functional)                    |
+|                                                                       |
+| The portal is at /admin. Protected by Supabase Auth middleware.       |
+| Session checked server-side on every route. No client-side-only auth. |
+|                                                                       |
+| 4.1 — Dashboard                                                       |
+|                                                                       |
+| -   KPI cards from live Supabase queries: page_views_today,           |
+|     whatsapp_clicks_today, quote_requests_today, bookings_pending,    |
+|     leads_new, active_services_count.                                 |
+|                                                                       |
+| -   Activity feed: SELECT * FROM audit_log ORDER BY created_at DESC   |
+|     LIMIT 10 — renders in real time via Supabase Realtime.            |
+|                                                                       |
+| -   Quick-action buttons: navigate to specific admin sections — not   |
+|     modal openers.                                                    |
+|                                                                       |
+| -   Supabase Realtime: subscribe to bookings and leads on mount →     |
+|     toast notification on new record.                                 |
+|                                                                       |
+| 4.2 — Services Manager                                                |
+|                                                                       |
+| -   Category list: sortable via @hello-pangea/dnd — drag handle       |
+|     column, save order via Server Action on drop.                     |
+|                                                                       |
+| -   Service form: zod schema validates name_es (required), price      |
+|     (positive number when price_type is fixed/starting_at),           |
+|     category_id (required).                                           |
+|                                                                       |
+| -   Before/after photo-pair upload: two drop zones (before, after) →  |
+|     sharp compress to max 1200px/85% quality → Supabase Storage →     |
+|     update before_photo_url / after_photo_url.                        |
+|                                                                       |
+| -   Video upload: drop zone → Supabase Storage → server-side ffmpeg   |
+|     extracts a real frame at t=1s as video_poster_url. Never a        |
+|     generated thumbnail.                                              |
+|                                                                       |
+| -   "Unavailable" toggle: optimistic UI update → Server Action →      |
+|     revalidatePath("/").                                              |
+|                                                                       |
+| 4.3 — Bookings & Crew Scheduling                                      |
+|                                                                       |
+| -   Calendar-grid view: week/day grid, jobs render as draggable       |
+|     blocks; dragging a block updates scheduled_at via Server Action.  |
+|                                                                       |
+| -   Status buttons: Confirm / In Progress / Complete / Cancel — each  |
+|     updates the DB and fires an audit_log INSERT.                     |
+|                                                                       |
+| -   WhatsApp confirm: pre-filled wa.me link — "Hola {name}, su        |
+|     servicio de {service} el {date} a las {time} está CONFIRMADO." —  |
+|     admin clicks, opens WhatsApp in a new tab.                        |
+|                                                                       |
+| -   Crew assignment: dropdown of active staff_members with role =     |
+|     'crew' → writes to bookings.crew_assigned.                        |
+|                                                                       |
+| -   Jobs-per-day chart: recharts BarChart, x-axis = date, y-axis =    |
+|     job count — replaces the restaurant template's cover-forecast     |
+|     chart.                                                            |
+|                                                                       |
+| -   Deposit toggle: checkbox on the booking form for larger           |
+|     commercial jobs → shows deposit amount field → stores             |
+|     deposit_amount, deposit_paid = false.                             |
+|                                                                       |
+| 4.4 — Customer CRM                                                    |
+|                                                                       |
+| -   Customer auto-creation: on each new booking INSERT, upsert        |
+|     customer by phone number; increment visit_count.                  |
+|                                                                       |
+| -   Profile page: shows all bookings, service timeline                |
+|     (chronological), tags, notes, spend total.                        |
+|                                                                       |
+| -   Tags: multi-select chip input — options: Residencial, Comercial,  |
+|     Recurrente, VIP, Primera vez.                                     |
+|                                                                       |
+| -   WhatsApp shortcut: wa.me link with pre-filled "Hola {name}," —    |
+|     admin adds their own message.                                     |
+|                                                                       |
+| -   Segment filter: filter by tags[], last_service_before,            |
+|     visit_count_min — URL-serialized so the filter is shareable.      |
+|                                                                       |
+| -   CSV export: SELECT all customers WHERE business_id = X → stream   |
+|     as CSV download via a Next.js Route Handler.                      |
+|                                                                       |
+| 4.5 — Leads Kanban                                                    |
+|                                                                       |
+| -   Columns: New | Contacted | Qualified | Converted | Closed.        |
+|                                                                       |
+| -   Card: source badge (color-coded — includes quote_calculator),     |
+|     name, phone, message preview (40 chars), created_at relative      |
+|     timestamp.                                                        |
+|                                                                       |
+| -   DnD across columns: @hello-pangea/dnd → Server Action updates     |
+|     status on drop.                                                   |
+|                                                                       |
+| -   Card detail: click → slide-over panel → full message, all fields, |
+|     "Reply on WhatsApp" button, "Assign to" dropdown.                 |
+|                                                                       |
+| -   Lead source chart: recharts PieChart showing distribution by      |
+|     source field.                                                     |
+|                                                                       |
+| -   Auto-capture: every WhatsApp widget click with a referrer creates |
+|     a lead via the api/track route → INSERT leads (source:            |
+|     "whatsapp_widget", message: "Clicked WhatsApp from website").     |
+|                                                                       |
+| 4.6 — Analytics Dashboard                                             |
+|                                                                       |
+| -   Date range picker: last 7 / 30 / 90 days or custom.               |
+|                                                                       |
+| -   Page views chart: recharts LineChart, GROUP BY date, last N days. |
+|                                                                       |
+| -   WhatsApp CTR: (whatsapp_clicks / page_views) * 100 — shown as %.  |
+|                                                                       |
+| -   Top requested services: recharts HorizontalBarChart, GROUP BY     |
+|     metadata->>'category' from service_section_view events.           |
+|                                                                       |
+| -   Quote-request funnel: page_view → quote_calculator_used →         |
+|     whatsapp_click — recharts FunnelChart.                            |
+|                                                                       |
+| -   Service-area lead heatmap: GROUP BY metadata->>'zone' (captured   |
+|     at lead creation) — classify by neighborhood/zone to show which   |
+|     areas actually convert.                                           |
+|                                                                       |
+| 4.7 — Site Editor                                                     |
+|                                                                       |
+| -   Hero form: hero_headline, hero_subheadline, cta_text — live       |
+|     preview panel on right side.                                      |
+|                                                                       |
+| -   Announcement bar: text field + active toggle + optional expiry    |
+|     datetime → updates site_settings.                                 |
+|                                                                       |
+| -   Gallery manager: three tabs — "Fotos generales", "Antes y         |
+|     Después" (pair-aware uploader), "Videos" — drag-to-reorder,       |
+|     toggle active/inactive, "Re-sync from Instagram" button re-runs   |
+|     the full Step 0A pipeline including video.                        |
+|                                                                       |
+| -   Business hours: 7-day grid, each day has open/closed toggle +     |
+|     open_time + close_time → writes to businesses.opening_hours       |
+|     jsonb.                                                            |
+|                                                                       |
+| -   Service area editor: toggle between fixed address and zone/radius |
+|     mode, edit zones list or radius_km → updates                      |
+|     businesses.service_area.                                          |
+|                                                                       |
+| 4.8 — Reviews Manager                                                 |
+|                                                                       |
+| -   Review list: all reviews from the reviews table, sorted by        |
+|     review_date DESC.                                                 |
+|                                                                       |
+| -   "Visible on site" toggle per review — optimistic update → Server  |
+|     Action.                                                           |
+|                                                                       |
+| -   "Flag for attention" — sets flagged = true → highlights the row   |
+|     in red in the admin list.                                         |
+|                                                                       |
+| -   Reply draft: textarea saves to reply_draft column — admin copies  |
+|     and pastes to Google manually (no OAuth needed).                  |
+|                                                                       |
+| -   "Request Review" button: generates a wa.me link with the message  |
+|     "Hola {name}, muchas gracias por confiar en nosotros. ¿Podría     |
+|     dejarnos una reseña en Google? {link}" — admin clicks to send.    |
+|                                                                       |
+| 4.9 — Staff & Crew Access Control                                     |
+|                                                                       |
+| -   Staff list: name, email, role badge (Owner / Manager / Crew),     |
+|     active toggle — owner-only page (enforced by RLS).                |
+|                                                                       |
+| -   Invite: email input + role select → Supabase Admin SDK sendInvite |
+|     → creates auth user → staff_members INSERT.                       |
+|                                                                       |
+| -   Role change: select dropdown → UPDATE staff_members → INSERT      |
+|     audit_log.                                                        |
+|                                                                       |
+| -   Crew scope: a user with role = 'crew' only sees /admin/bookings   |
+|     filtered to their own crew_assigned jobs — enforced by RLS, not   |
+|     by hiding UI.                                                     |
+|                                                                       |
+| -   Deactivate: sets active = false → the user can no longer log in   |
+|     to this business's portal (RLS blocks all queries).               |
+|                                                                       |
+| 4.10 — Settings                                                       |
+|                                                                       |
+| -   WhatsApp: phone input (E.164 format validated) + greeting         |
+|     template textarea → updates businesses.phone +                    |
+|     site_settings.whatsapp_greeting.                                  |
+|                                                                       |
+| -   Service area: mode toggle (fixed address / zones / radius) with   |
+|     the corresponding fields.                                         |
+|                                                                       |
+| -   Quote calculator: base prices and size-tier multipliers editable  |
+|     per service — never hardcoded in the frontend.                    |
+|                                                                       |
+| -   Language defaults: radio select primary language → updates        |
+|     businesses.languages[0].                                          |
+|                                                                       |
+| -   Timezone: select from tz database — used for hours display and    |
+|     the jobs-per-day chart.                                           |
+|                                                                       |
+| -   Currency: select (BOB / USD / ARS / PEN / CLP etc.) → used in     |
+|     service price display, defaults to BOB.                           |
+|                                                                       |
+| -   Tracking IDs: ga_tracking_id, meta_pixel_id → updates             |
+|     site_settings → injected into public layout.tsx.                  |
+|                                                                       |
+| STEP 5 — PLAYWRIGHT E2E TEST SUITE (mandatory, run before marking     |
+| done)                                                                 |
+|                                                                       |
+| Create file: tests/e2e/pressure-washing.spec.ts. All tests must PASS  |
+| before the deliverable is considered complete. Do not submit with     |
+| failing tests.                                                        |
+|                                                                       |
+| Public Site Tests                                                     |
+|                                                                       |
+| -   test("hero media visible and CTA button present", ...)            |
+|                                                                       |
+| -   test("WhatsApp widget visible and href includes phone number",    |
+|     ...)                                                              |
+|                                                                       |
+| -   test("services section renders categories and items from DB",     |
+|     ...)                                                              |
+|                                                                       |
+| -   test("before/after slider renders paired real images and drag     |
+|     works", ...)                                                      |
+|                                                                       |
+| -   test("unavailable service shows badge and is not bookable", ...)  |
+|                                                                       |
+| -   test("bilingual toggle switches all visible text", ...)           |
+|                                                                       |
+| -   test("video reel section renders with real poster image", ...)    |
+|                                                                       |
+| -   test("Google Map or service-area list renders", ...)              |
+|                                                                       |
+| -   test("Schema.org JSON-LD is valid JSON and contains               |
+|     HomeAndConstructionBusiness type", ...)                           |
+|                                                                       |
+| -   test("quote calculator produces an estimate range and hands off   |
+|     to WhatsApp", ...)                                                |
+|                                                                       |
+| Admin Portal Tests (Playwright authenticated session)                 |
+|                                                                       |
+| -   test("admin login succeeds with valid credentials", ...)          |
+|                                                                       |
+| -   test("dashboard KPI cards show non-null values", ...)             |
+|                                                                       |
+| -   test("add service → item appears in public site services          |
+|     section", ...)                                                    |
+|                                                                       |
+| -   test("upload before/after pair → appears in public before/after   |
+|     slider", ...)                                                     |
+|                                                                       |
+| -   test("drag booking to new date → new scheduled_at persists after  |
+|     reload", ...)                                                     |
+|                                                                       |
+| -   test("new booking appears in admin bookings calendar within 3s",  |
+|     ...)                                                              |
+|                                                                       |
+| -   test("confirm booking → status updates to confirmed", ...)        |
+|                                                                       |
+| -   test("customer profile auto-created after booking submission",    |
+|     ...)                                                              |
+|                                                                       |
+| -   test("lead kanban card moves between columns", ...)               |
+|                                                                       |
+| -   test("crew-role user cannot access /admin/staff route", ...)      |
+|                                                                       |
+| -   test("every admin action creates an audit_log entry", ...)        |
+|                                                                       |
+| STEP 6 — DELIVERABLE CHECKLIST                                        |
+|                                                                       |
+| Do not consider this prompt complete until every item below is        |
+| verified.                                                             |
+|                                                                       |
+| +--------------------------------+--------------------------------+   |
+| | Files to deliver               | Quality gates                  |   |
+| |                                |                                |   |
+| | -   supab                      | -   All Playwright tests: PASS |   |
+| | ase/migrations/001_initial.sql |                                |   |
+| |     — full schema              | -   TypeScript: 0 errors (tsc  |   |
+| |                                |     --noEmit)                  |   |
+| | -   .env.example — all env     |                                |   |
+| |     vars documented            | -   No "any" types in codebase |   |
+| |                                |                                |   |
+| | -   vercel.json — env var      | -   Lighthouse mobile score ≥  |   |
+| |     references, headers        |     85 (Performance,           |   |
+| |                                |     Accessibility, SEO)        |   |
+| | -   .github/workflows/ci.yml — |                                |   |
+| |     lint + Playwright on push  | -   WCAG AA: all               |   |
+| |                                |     text/background contrast ≥ |   |
+| | -   test                       |     4.5:1                      |   |
+| | s/e2e/pressure-washing.spec.ts |                                |   |
+| |     — all tests passing        | -   Schema.org: validates at   |   |
+| |                                |     schema.org/validator as    |   |
+| | -   DATA_AUDIT.md — field ×    |                                |   |
+| |     source × value log         |    HomeAndConstructionBusiness |   |
+| |                                |                                |   |
+| | -   TECH_DECISIONS.md — any    | -   No hardcoded data — all    |   |
+| |     stack deviation documented |     content from DB or scraped |   |
+| |                                |     context                    |   |
+| | -   README.md — local setup,   |                                |   |
+| |     Supabase connect, Vercel   | -   No AI-generated images OR  |   |
+| |     deploy                     |     video anywhere on the site |   |
+| |                                |     — real photos/video only,  |   |
+| |                                |     from Instagram or admin    |   |
+| |                                |     upload, gaps flagged       |   |
+| |                                |     rather than filled         |   |
+| |                                |                                |   |
+| |                                | -   Every before/after pair    |   |
+| |                                |     verified as a real,        |   |
+| |                                |     same-job pair — not        |   |
+| |                                |     synthesized, not           |   |
+| |                                |     cropped/graded to          |   |
+| |                                |     exaggerate contrast        |   |
+| +--------------------------------+--------------------------------+   |
+|                                                                       |
+| PHASE 2 UPSELL — Unlock After Client Signs Off                        |
+|                                                                       |
+| Do not build these in Phase 1. Flag them in README as roadmap items   |
+| to pitch after site launch.                                           |
+|                                                                       |
+| -   Online payment: booking deposit collection via Stripe Checkout,   |
+|     tied into the bookings flow.                                      |
+|                                                                       |
+| -   Recurring maintenance plans: quarterly/biannual wash              |
+|     subscriptions — customers table already supports visit_count; add |
+|     a plan/frequency field and an auto WhatsApp reminder when the     |
+|     next service is due.                                              |
+|                                                                       |
+| -   Route optimization / crew dispatch: for multi-job days, sequence  |
+|     bookings by location for the assigned crew.                       |
+|                                                                       |
+| -   Multi-location / franchise support: businesses table already      |
+|     supports multi-tenant — add a location switcher to admin.         |
+|                                                                       |
+| -   AI Chatbot (Shirley pattern): Claude API integration for WhatsApp |
+|     auto-replies to common quote questions.                           |
++-----------------------------------------------------------------------+
+
+3. Usage Notes
+
+-   One business = two inputs. Company Name + Instagram URL. That is the
+    entire workflow per client.
+
+-   Library: save each filled version as "[CompanyName]_v1.md" — track
+    what was scraped vs. manually supplied.
+
+-   Default admin credentials: owner email = first staff invite. No
+    shared passwords. Owner sets their own password via Supabase email
+    invite.
+
+-   Supabase free tier: 500MB DB + 2GB storage + 50,000 MAU — covers a
+    single business indefinitely at demo and early-live scale. Video
+    storage is the constraint to watch, not rows — budget accordingly
+    once Reels are in play.
+
+-   Phase 2 pitch: after the site is live and the owner sees the admin
+    portal working, pitch recurring maintenance plans and crew dispatch
+    as a monthly SaaS retainer — the database is already structured for
+    it.
+
+-   Instagram re-sync: owner can click "Re-sync from Instagram" in Admin
+    → Site Editor at any time to pull new photos and video without a
+    redeploy.
+
+-   Bolivia-specific: currency defaults to BOB. Default service area:
+    Santa Cruz de la Sierra metro + configurable radius, editable in
+    Admin → Settings once the real address/zones are confirmed from the
+    scrape. WhatsApp is the primary conversion channel — not email.
+
++-----------------------------------------------------------------------+
+| QUICK-START REFERENCE                                                 |
+|                                                                       |
+| You provide:                                                          |
+|                                                                       |
+| -   Company Name + Instagram URL (lavadoatp /                         |
+|     https://www.instagram.com/lavadoatp/)                             |
+|                                                                       |
+| Agent auto-scrapes:                                                   |
+|                                                                       |
+| -   phone · address or service area · hours · brand colors · real     |
+|     photos and Reels · reviews · service list · service type ·        |
+|     language                                                          |
+|                                                                       |
+| What gets built:                                                      |
+|                                                                       |
+| -   Public site (hero, services, before/after slider, video reels,    |
+|     service area, quote calculator, reviews, WhatsApp, Schema.org,    |
+|     bilingual) + Admin portal (10 fully-tested modules) + Full DB     |
+|     schema · CI/CD · Playwright suite                                 |
+|                                                                       |
+| Phase 2 upsell:                                                       |
+|                                                                       |
+| -   Payments · Recurring maintenance plans · Route/crew dispatch ·    |
+|     Multi-location · AI WhatsApp assistant                            |
++-----------------------------------------------------------------------+
