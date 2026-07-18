@@ -1,0 +1,864 @@
+     1→"use client";
+     2→// Module 4.7 — Site Editor: hero (es/en) live preview, hero media uploads,
+     3→// announcement bar, gallery CRUD (Task ID 6), hours grid.
+     4→import * as React from "react";
+     5→import {
+     6→  Save, Megaphone, Images, Clock, Droplets, Plus, Pencil, Trash2,
+     7→  ArrowUp, ArrowDown, Film, Image as ImageIcon,
+     8→} from "lucide-react";
+     9→import { useLang, t } from "@/lib/i18n";
+    10→import { toast } from "sonner";
+    11→import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+    12→import { Button } from "@/components/ui/button";
+    13→import { Input } from "@/components/ui/input";
+    14→import { Textarea } from "@/components/ui/textarea";
+    15→import { Label } from "@/components/ui/label";
+    16→import { Switch } from "@/components/ui/switch";
+    17→import { Badge } from "@/components/ui/badge";
+    18→import { Separator } from "@/components/ui/separator";
+    19→import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+    20→import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+    21→import {
+    22→  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose,
+    23→} from "@/components/ui/dialog";
+    24→import { adminFetch, LoadingBlock, EmptyState, Spinner } from "./_shared";
+    25→import { MediaDropzone } from "./media-dropzone";
+    26→import type { PublicData } from "@/lib/public-data";
+    27→import type { Business, SiteSettings, GalleryItem, OpeningHours } from "@/lib/types";
+    28→
+    29→interface SettingsResponse {
+    30→  business: Business;
+    31→  settings: SiteSettings;
+    32→}
+    33→interface GalleryResponse { items: GalleryItem[] }
+    34→
+    35→const DAY_KEYS_RAW = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"] as const;
+    36→const DAY_LABELS_ES = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
+    37→const DAY_LABELS_EN = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+    38→
+    39→type GalleryTab = "photos" | "before-after" | "videos";
+    40→
+    41→export function SiteEditor({ data }: { data: PublicData }) {
+    42→  const lang = useLang((s) => s.lang);
+    43→  const [business, setBusiness] = React.useState<Business | null>(data.business ?? null);
+    44→  const [settings, setSettings] = React.useState<SiteSettings | null>(data.settings ?? null);
+    45→  const [gallery, setGallery] = React.useState<GalleryItem[]>([]);
+    46→  const [loading, setLoading] = React.useState(true);
+    47→  const [saving, setSaving] = React.useState<Record<string, boolean>>({});
+    48→
+    49→  const reload = React.useCallback(async () => {
+    50→    setLoading(true);
+    51→    try {
+    52→      const [s, g] = await Promise.all([
+    53→        adminFetch<SettingsResponse>("/api/admin/settings"),
+    54→        adminFetch<GalleryResponse>("/api/admin/gallery"),
+    55→      ]);
+    56→      setBusiness(s.business);
+    57→      setSettings(s.settings);
+    58→      setGallery(g.items ?? []);
+    59→    } catch (e) {
+    60→      toast.error(lang === "en" ? "Failed to load editor data" : "Error al cargar el editor");
+    61→      void e;
+    62→    } finally {
+    63→      setLoading(false);
+    64→    }
+    65→  }, [lang]);
+    66→
+    67→  React.useEffect(() => { void reload(); }, [reload]);
+    68→
+    69→  const save = async (section: string, payload: Record<string, unknown>, label: string) => {
+    70→    setSaving((s) => ({ ...s, [section]: true }));
+    71→    try {
+    72→      await adminFetch("/api/admin/settings", { method: "PUT", body: JSON.stringify(payload) });
+    73→      toast.success(label);
+    74→    } catch (e) {
+    75→      toast.error(lang === "en" ? "Save failed" : "Error al guardar");
+    76→      void e;
+    77→    } finally {
+    78→      setSaving((s) => ({ ...s, [section]: false }));
+    79→    }
+    80→  };
+    81→
+    82→  if (loading || !business || !settings) {
+    83→    return (
+    84→      <div className="flex flex-col gap-6">
+    85→        <h1 className="text-2xl font-bold tracking-tight">{t(lang, "admin_editor")}</h1>
+    86→        <Card><CardContent><LoadingBlock rows={6} /></CardContent></Card>
+    87→      </div>
+    88→    );
+    89→  }
+    90→
+    91→  return (
+    92→    <div className="flex flex-col gap-6">
+    93→      <div>
+    94→        <h1 className="text-2xl font-bold tracking-tight">{t(lang, "admin_editor")}</h1>
+    95→        <p className="text-sm text-muted-foreground mt-0.5">
+    96→          {lang === "en" ? "Edit live content with bilingual preview." : "Edita contenido en vivo con vista bilingüe."}
+    97→        </p>
+    98→      </div>
+    99→
+   100→      {/* HERO COPY */}
+   101→      <Card>
+   102→        <CardHeader>
+   103→          <CardTitle className="text-base flex items-center gap-2"><Droplets className="size-4 text-primary" />{lang === "en" ? "Hero copy" : "Texto Hero"}</CardTitle>
+   104→          <CardDescription>{lang === "en" ? "Headline, subheadline and CTA." : "Titular, subtítulo y CTA."}</CardDescription>
+   105→        </CardHeader>
+   106→        <CardContent>
+   107→          <HeroEditor settings={settings} lang={lang} saving={!!saving.hero} onChange={setSettings} onSave={() => void save("hero", { settings: pickHero(settings) }, lang === "en" ? "Hero saved" : "Hero guardado")} />
+   108→        </CardContent>
+   109→      </Card>
+   110→
+   111→      {/* HERO MEDIA (Task ID 6) */}
+   112→      <Card>
+   113→        <CardHeader>
+   114→          <CardTitle className="text-base flex items-center gap-2"><Film className="size-4 text-primary" />{lang === "en" ? "Hero media" : "Medios del Hero"}</CardTitle>
+   115→          <CardDescription>
+   116→            {lang === "en"
+   117→              ? "Desktop image and mobile video (with optional poster). Mobile shows the video, desktop shows the image."
+   118→              : "Imagen de escritorio y video de móvil (con póster opcional). El móvil muestra el video; el escritorio, la imagen."}
+   119→          </CardDescription>
+   120→        </CardHeader>
+   121→        <CardContent>
+   122→          <HeroMediaEditor settings={settings} lang={lang} saving={!!saving.heroMedia} onChange={setSettings} onSave={() => void save("heroMedia", { settings: pickHeroMedia(settings) }, lang === "en" ? "Hero media saved" : "Medios del hero guardados")} />
+   123→        </CardContent>
+   124→      </Card>
+   125→
+   126→      {/* ANNOUNCEMENT */}
+   127→      <Card>
+   128→        <CardHeader>
+   129→          <CardTitle className="text-base flex items-center gap-2"><Megaphone className="size-4 text-primary" />{lang === "en" ? "Announcement bar" : "Barra de anuncio"}</CardTitle>
+   130→          <CardDescription>{lang === "en" ? "Top promo banner." : "Banner superior."}</CardDescription>
+   131→        </CardHeader>
+   132→        <CardContent>
+   133→          <AnnouncementEditor settings={settings} lang={lang} saving={!!saving.announce} onChange={setSettings} onSave={() => void save("announce", { settings: pickAnnouncement(settings) }, lang === "en" ? "Announcement saved" : "Anuncio guardado")} />
+   134→        </CardContent>
+   135→      </Card>
+   136→
+   137→      {/* GALLERY (Task ID 6 — full CRUD) */}
+   138→      <Card>
+   139→        <CardHeader>
+   140→          <CardTitle className="text-base flex items-center gap-2"><Images className="size-4 text-primary" />{lang === "en" ? "Gallery" : "Galería"}</CardTitle>
+   141→          <CardDescription>
+   142→            {lang === "en"
+   143→              ? "Add, edit, delete, reorder, and toggle visibility."
+   144→              : "Agrega, edita, elimina, reordena y cambia visibilidad."}
+   145→          </CardDescription>
+   146→        </CardHeader>
+   147→        <CardContent>
+   148→          <GalleryManager items={gallery} lang={lang} onUpdated={setGallery} onReload={() => void reload()} />
+   149→        </CardContent>
+   150→      </Card>
+   151→
+   152→      {/* HOURS */}
+   153→      <Card>
+   154→        <CardHeader>
+   155→          <CardTitle className="text-base flex items-center gap-2"><Clock className="size-4 text-primary" />{lang === "en" ? "Business hours" : "Horario"}</CardTitle>
+   156→          <CardDescription>{lang === "en" ? "7-day grid." : "Grilla de 7 días."}</CardDescription>
+   157→        </CardHeader>
+   158→        <CardContent>
+   159→          <HoursEditor business={business} lang={lang} saving={!!saving.hours} onChange={setBusiness} onSave={() => void save("hours", { business: { openingHours: business.openingHours } }, lang === "en" ? "Hours saved" : "Horario guardado")} />
+   160→        </CardContent>
+   161→      </Card>
+   162→    </div>
+   163→  );
+   164→}
+   165→
+   166→function pickHero(s: SiteSettings) {
+   167→  return {
+   168→    heroHeadlineEs: s.heroHeadlineEs,
+   169→    heroHeadlineEn: s.heroHeadlineEn,
+   170→    heroSubheadlineEs: s.heroSubheadlineEs,
+   171→    heroSubheadlineEn: s.heroSubheadlineEn,
+   172→    ctaTextEs: s.ctaTextEs,
+   173→    ctaTextEn: s.ctaTextEn,
+   174→  };
+   175→}
+   176→
+   177→function pickHeroMedia(s: SiteSettings) {
+   178→  // Send empty string (not null) so PUT can clear existing values.
+   179→  return {
+   180→    heroImageUrl: s.heroImageUrl ?? "",
+   181→    heroVideoUrl: s.heroVideoUrl ?? "",
+   182→    heroVideoPosterUrl: s.heroVideoPosterUrl ?? "",
+   183→  };
+   184→}
+   185→
+   186→function pickAnnouncement(s: SiteSettings) {
+   187→  return {
+   188→    announcementBarTextEs: s.announcementBarTextEs,
+   189→    announcementBarTextEn: s.announcementBarTextEn,
+   190→    announcementBarActive: s.announcementBarActive,
+   191→  };
+   192→}
+   193→
+   194→function HeroEditor({
+   195→  settings, lang, saving, onChange, onSave,
+   196→}: {
+   197→  settings: SiteSettings;
+   198→  lang: "es" | "en";
+   199→  saving: boolean;
+   200→  onChange: (s: SiteSettings) => void;
+   201→  onSave: () => void;
+   202→}) {
+   203→  const upd = (patch: Partial<SiteSettings>) => onChange({ ...settings, ...patch });
+   204→  const headline = lang === "en" ? settings.heroHeadlineEn : settings.heroHeadlineEs;
+   205→  const sub = lang === "en" ? settings.heroSubheadlineEn : settings.heroSubheadlineEs;
+   206→  const cta = lang === "en" ? settings.ctaTextEn : settings.ctaTextEs;
+   207→
+   208→  return (
+   209→    <div className="flex flex-col gap-5">
+   210→      {/* Preview */}
+   211→      <div className="relative overflow-hidden rounded-xl border border-border">
+   212→        <div className="absolute inset-0 bg-water-texture bg-primary" />
+   213→        <div className="absolute inset-0 bg-gradient-to-br from-primary/85 to-black/55" />
+   214→        <div className="relative p-6 sm:p-8">
+   215→          <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight">{headline || "—"}</h2>
+   216→          <p className="mt-2 text-sm text-white/85 max-w-xl">{sub || "—"}</p>
+   217→          <span className="mt-4 inline-flex items-center gap-2 rounded-xl bg-accent text-accent-foreground px-4 py-2.5 text-sm font-bold">
+   218→            <Droplets className="size-4" />{cta || "—"}
+   219→          </span>
+   220→        </div>
+   221→      </div>
+   222→
+   223→      {/* Editors */}
+   224→      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+   225→        <div className="flex flex-col gap-1.5">
+   226→          <Label>{lang === "en" ? "Headline (ES)" : "Titular (ES)"}</Label>
+   227→          <Input value={settings.heroHeadlineEs} onChange={(e) => upd({ heroHeadlineEs: e.target.value })} />
+   228→        </div>
+   229→        <div className="flex flex-col gap-1.5">
+   230→          <Label>Headline (EN)</Label>
+   231→          <Input value={settings.heroHeadlineEn} onChange={(e) => upd({ heroHeadlineEn: e.target.value })} />
+   232→        </div>
+   233→        <div className="flex flex-col gap-1.5">
+   234→          <Label>{lang === "en" ? "Subheadline (ES)" : "Subtítulo (ES)"}</Label>
+   235→          <Textarea rows={2} value={settings.heroSubheadlineEs} onChange={(e) => upd({ heroSubheadlineEs: e.target.value })} />
+   236→        </div>
+   237→        <div className="flex flex-col gap-1.5">
+   238→          <Label>Subheadline (EN)</Label>
+   239→          <Textarea rows={2} value={settings.heroSubheadlineEn} onChange={(e) => upd({ heroSubheadlineEn: e.target.value })} />
+   240→        </div>
+   241→        <div className="flex flex-col gap-1.5">
+   242→          <Label>{lang === "en" ? "CTA text (ES)" : "Texto CTA (ES)"}</Label>
+   243→          <Input value={settings.ctaTextEs} onChange={(e) => upd({ ctaTextEs: e.target.value })} />
+   244→        </div>
+   245→        <div className="flex flex-col gap-1.5">
+   246→          <Label>CTA text (EN)</Label>
+   247→          <Input value={settings.ctaTextEn} onChange={(e) => upd({ ctaTextEn: e.target.value })} />
+   248→        </div>
+   249→      </div>
+   250→
+   251→      <Button onClick={onSave} disabled={saving} className="self-start">
+   252→        {saving ? <Spinner className="mr-2" /> : <Save className="size-4" />}
+   253→        {lang === "en" ? "Save hero copy" : "Guardar texto hero"}
+   254→      </Button>
+   255→    </div>
+   256→  );
+   257→}
+   258→
+   259→function HeroMediaEditor({
+   260→  settings, lang, saving, onChange, onSave,
+   261→}: {
+   262→  settings: SiteSettings;
+   263→  lang: "es" | "en";
+   264→  saving: boolean;
+   265→  onChange: (s: SiteSettings) => void;
+   266→  onSave: () => void;
+   267→}) {
+   268→  const upd = (patch: Partial<SiteSettings>) => onChange({ ...settings, ...patch });
+   269→
+   270→  return (
+   271→    <div className="flex flex-col gap-4">
+   272→      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+   273→        <MediaDropzone
+   274→          label={lang === "en" ? "Hero image (desktop)" : "Imagen hero (escritorio)"}
+   275→          value={settings.heroImageUrl}
+   276→          mediaType="image"
+   277→          onChange={(url) => upd({ heroImageUrl: url })}
+   278→        />
+   279→        <MediaDropzone
+   280→          label={lang === "en" ? "Hero video (mobile)" : "Video hero (móvil)"}
+   281→          value={settings.heroVideoUrl}
+   282→          mediaType="video"
+   283→          onChange={(url) => upd({ heroVideoUrl: url })}
+   284→        />
+   285→        <MediaDropzone
+   286→          label={lang === "en" ? "Video poster image" : "Póster del video"}
+   287→          value={settings.heroVideoPosterUrl}
+   288→          mediaType="image"
+   289→          onChange={(url) => upd({ heroVideoPosterUrl: url })}
+   290→        />
+   291→      </div>
+   292→
+   293→      {/* Live preview */}
+   294→      <div className="rounded-md border border-border overflow-hidden">
+   295→        <div className="text-xs text-muted-foreground p-2 bg-muted/30">
+   296→          {lang === "en" ? "Preview — left: desktop (image), right: mobile (video)" : "Vista previa — izq: escritorio (imagen), der: móvil (video)"}
+   297→        </div>
+   298→        <div className="grid grid-cols-2 gap-1 p-2">
+   299→          <div className="aspect-video relative bg-muted overflow-hidden rounded">
+   300→            {settings.heroImageUrl ? (
+   301→              <img src={settings.heroImageUrl} alt="hero desktop" className="size-full object-cover" />
+   302→            ) : (
+   303→              <div className="size-full flex items-center justify-center text-xs text-muted-foreground">—</div>
+   304→            )}
+   305→            <span className="absolute top-1 left-1 text-[10px] bg-black/60 text-white px-1.5 rounded">Desktop</span>
+   306→          </div>
+   307→          <div className="aspect-video relative bg-muted overflow-hidden rounded">
+   308→            {settings.heroVideoUrl ? (
+   309→              <video
+   310→                src={settings.heroVideoUrl}
+   311→                poster={settings.heroVideoPosterUrl ?? undefined}
+   312→                className="size-full object-cover"
+   313→                muted
+   314→                playsInline
+   315→                preload="metadata"
+   316→              />
+   317→            ) : settings.heroVideoPosterUrl ? (
+   318→              <img src={settings.heroVideoPosterUrl} alt="hero mobile poster" className="size-full object-cover" />
+   319→            ) : (
+   320→              <div className="size-full flex items-center justify-center text-xs text-muted-foreground">—</div>
+   321→            )}
+   322→            <span className="absolute top-1 left-1 text-[10px] bg-black/60 text-white px-1.5 rounded">Mobile</span>
+   323→          </div>
+   324→        </div>
+   325→      </div>
+   326→
+   327→      <Button onClick={onSave} disabled={saving} className="self-start">
+   328→        {saving ? <Spinner className="mr-2" /> : <Save className="size-4" />}
+   329→        {lang === "en" ? "Save hero media" : "Guardar medios del hero"}
+   330→      </Button>
+   331→    </div>
+   332→  );
+   333→}
+   334→
+   335→function AnnouncementEditor({
+   336→  settings, lang, saving, onChange, onSave,
+   337→}: {
+   338→  settings: SiteSettings;
+   339→  lang: "es" | "en";
+   340→  saving: boolean;
+   341→  onChange: (s: SiteSettings) => void;
+   342→  onSave: () => void;
+   343→}) {
+   344→  const upd = (patch: Partial<SiteSettings>) => onChange({ ...settings, ...patch });
+   345→  return (
+   346→    <div className="flex flex-col gap-4">
+   347→      {settings.announcementBarActive ? (
+   348→        <div className="rounded-md bg-accent/30 border border-accent/40 px-3 py-2 text-sm text-accent-foreground">
+   349→          <Megaphone className="inline size-4 mr-1.5" />
+   350→          {lang === "en" ? (settings.announcementBarTextEn || "—") : (settings.announcementBarTextEs || "—")}
+   351→        </div>
+   352→      ) : null}
+   353→      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+   354→        <div className="flex flex-col gap-1.5">
+   355→          <Label>{lang === "en" ? "Text (ES)" : "Texto (ES)"}</Label>
+   356→          <Input value={settings.announcementBarTextEs ?? ""} onChange={(e) => upd({ announcementBarTextEs: e.target.value })} />
+   357→        </div>
+   358→        <div className="flex flex-col gap-1.5">
+   359→          <Label>Text (EN)</Label>
+   360→          <Input value={settings.announcementBarTextEn ?? ""} onChange={(e) => upd({ announcementBarTextEn: e.target.value })} />
+   361→        </div>
+   362→      </div>
+   363→      <div className="flex items-center gap-3">
+   364→        <Switch id="ann-active" checked={settings.announcementBarActive} onCheckedChange={(v) => upd({ announcementBarActive: v })} />
+   365→        <Label htmlFor="ann-active">{lang === "en" ? "Active on site" : "Activo en el sitio"}</Label>
+   366→      </div>
+   367→      <Button onClick={onSave} disabled={saving} className="self-start">
+   368→        {saving ? <Spinner className="mr-2" /> : <Save className="size-4" />}
+   369→        {lang === "en" ? "Save" : "Guardar"}
+   370→      </Button>
+   371→    </div>
+   372→  );
+   373→}
+   374→
+   375→// ─── Gallery (Task ID 6 — full CRUD with sub-tabs) ───────────────────────────
+   376→
+   377→function GalleryManager({
+   378→  items, lang, onUpdated, onReload,
+   379→}: {
+   380→  items: GalleryItem[];
+   381→  lang: "es" | "en";
+   382→  onUpdated: (next: GalleryItem[]) => void;
+   383→  onReload: () => void;
+   384→}) {
+   385→  const [tab, setTab] = React.useState<GalleryTab>("photos");
+   386→  const [editing, setEditing] = React.useState<GalleryItem | null>(null);
+   387→  const [creating, setCreating] = React.useState<GalleryTab | null>(null);
+   388→
+   389→  // existing before/after pairs (for the pair selector)
+   390→  const pairs = React.useMemo(() => {
+   391→    const map = new Map<string, { pairId: string; before?: GalleryItem; after?: GalleryItem }>();
+   392→    for (const it of items) {
+   393→      if (!it.isBeforeAfter || !it.pairId) continue;
+   394→      const p = map.get(it.pairId) ?? { pairId: it.pairId };
+   395→      if (it.pairRole === "before") p.before = it;
+   396→      if (it.pairRole === "after") p.after = it;
+   397→      map.set(it.pairId, p);
+   398→    }
+   399→    return Array.from(map.values());
+   400→  }, [items]);
+   401→
+   402→  // items in current tab (sorted)
+   403→  const tabItems = React.useMemo(() => {
+   404→    let list: GalleryItem[] = items;
+   405→    if (tab === "photos") list = items.filter((it) => !it.isBeforeAfter && it.mediaType === "photo");
+   406→    if (tab === "before-after") list = items.filter((it) => it.isBeforeAfter);
+   407→    if (tab === "videos") list = items.filter((it) => !it.isBeforeAfter && it.mediaType === "video");
+   408→    return [...list].sort((a, b) => a.sortOrder - b.sortOrder);
+   409→  }, [items, tab]);
+   410→
+   411→  // CRUD handlers
+   412→  const toggleActive = async (item: GalleryItem, active: boolean) => {
+   413→    onUpdated(items.map((it) => (it.id === item.id ? { ...it, active } : it)));
+   414→    try {
+   415→      await adminFetch(`/api/admin/gallery/${item.id}`, { method: "PUT", body: JSON.stringify({ active }) });
+   416→      toast.success(active ? (lang === "en" ? "Visible" : "Visible") : (lang === "en" ? "Hidden" : "Oculto"));
+   417→    } catch {
+   418→      toast.error(lang === "en" ? "Update failed" : "Error al actualizar");
+   419→      onReload();
+   420→    }
+   421→  };
+   422→
+   423→  const handleDelete = async (item: GalleryItem) => {
+   424→    if (!window.confirm(lang === "en" ? "Delete this gallery item?" : "¿Eliminar este item de galería?")) return;
+   425→    onUpdated(items.filter((it) => it.id !== item.id));
+   426→    try {
+   427→      await adminFetch(`/api/admin/gallery/${item.id}`, { method: "DELETE" });
+   428→      toast.success(lang === "en" ? "Item deleted" : "Item eliminado");
+   429→    } catch {
+   430→      toast.error(lang === "en" ? "Delete failed" : "Error al eliminar");
+   431→      onReload();
+   432→    }
+   433→  };
+   434→
+   435→  const move = async (item: GalleryItem, dir: -1 | 1) => {
+   436→    const list = tabItems;
+   437→    const idx = list.findIndex((it) => it.id === item.id);
+   438→    const newIdx = idx + dir;
+   439→    if (idx === -1 || newIdx < 0 || newIdx >= list.length) return;
+   440→    const reordered = [...list];
+   441→    const tmp = reordered[idx];
+   442→    reordered[idx] = reordered[newIdx];
+   443→    reordered[newIdx] = tmp;
+   444→    const renumbered = reordered.map((it, i) => ({ ...it, sortOrder: i }));
+   445→    // optimistic: patch sortOrder for those items in the parent `items` array
+   446→    const map = new Map(renumbered.map((it) => [it.id, it.sortOrder]));
+   447→    onUpdated(items.map((it) => (map.has(it.id) ? { ...it, sortOrder: map.get(it.id)! } : it)));
+   448→    try {
+   449→      await Promise.all(
+   450→        renumbered.map((it) =>
+   451→          adminFetch(`/api/admin/gallery/${it.id}`, { method: "PUT", body: JSON.stringify({ sortOrder: it.sortOrder }) }),
+   452→        ),
+   453→      );
+   454→      toast.success(lang === "en" ? "Order saved" : "Orden guardado");
+   455→    } catch {
+   456→      toast.error(lang === "en" ? "Save failed" : "Error al guardar");
+   457→      onReload();
+   458→    }
+   459→  };
+   460→
+   461→  return (
+   462→    <div className="flex flex-col gap-4">
+   463→      <Tabs value={tab} onValueChange={(v) => setTab(v as GalleryTab)}>
+   464→        <TabsList>
+   465→          <TabsTrigger value="photos"><ImageIcon className="size-3.5" />{lang === "en" ? "Photos" : "Fotos generales"}</TabsTrigger>
+   466→          <TabsTrigger value="before-after">{lang === "en" ? "Before/After" : "Antes y Después"}</TabsTrigger>
+   467→          <TabsTrigger value="videos"><Film className="size-3.5" />{lang === "en" ? "Videos" : "Videos"}</TabsTrigger>
+   468→        </TabsList>
+   469→
+   470→        {(["photos", "before-after", "videos"] as GalleryTab[]).map((tb) => {
+   471→          const list = tb === "photos"
+   472→            ? items.filter((it) => !it.isBeforeAfter && it.mediaType === "photo")
+   473→            : tb === "before-after"
+   474→              ? items.filter((it) => it.isBeforeAfter)
+   475→              : items.filter((it) => !it.isBeforeAfter && it.mediaType === "video");
+   476→          const sorted = [...list].sort((a, b) => a.sortOrder - b.sortOrder);
+   477→          return (
+   478→            <TabsContent key={tb} value={tb} className="mt-3">
+   479→              <div className="flex justify-end mb-2">
+   480→                <Button size="sm" onClick={() => setCreating(tb)}>
+   481→                  <Plus className="size-4" />
+   482→                  {lang === "en" ? "Add item" : "Añadir item"}
+   483→                </Button>
+   484→              </div>
+   485→              {sorted.length === 0 ? (
+   486→                <EmptyState title={lang === "en" ? "No items yet" : "Sin items"} hint={lang === "en" ? "Click \"Add item\" to upload one." : "Haz clic en \"Añadir item\" para subir uno."} />
+   487→              ) : (
+   488→                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 max-h-[60vh] overflow-y-auto scroll-thin pr-1">
+   489→                  {sorted.map((it, i) => (
+   490→                    <GalleryCard
+   491→                      key={it.id}
+   492→                      item={it}
+   493→                      lang={lang}
+   494→                      index={i}
+   495→                      total={sorted.length}
+   496→                      onEdit={() => setEditing(it)}
+   497→                      onDelete={() => void handleDelete(it)}
+   498→                      onToggle={(v) => void toggleActive(it, v)}
+   499→                      onMove={(dir) => void move(it, dir)}
+   500→                    />
+   501→                  ))}
+   502→                </div>
+   503→              )}
+   504→            </TabsContent>
+   505→          );
+   506→        })}
+   507→      </Tabs>
+   508→
+   509→      {/* Edit dialog */}
+   510→      <GalleryItemDialog
+   511→        open={!!editing}
+   512→        item={editing}
+   513→        mode={editing ? modeOfItem(editing) : "photos"}
+   514→        pairs={pairs}
+   515→        lang={lang}
+   516→        onOpenChange={(o) => { if (!o) setEditing(null); }}
+   517→        onSaved={() => { setEditing(null); onReload(); }}
+   518→      />
+   519→
+   520→      {/* Create dialog */}
+   521→      <GalleryItemDialog
+   522→        open={!!creating}
+   523→        item={null}
+   524→        mode={creating ?? "photos"}
+   525→        pairs={pairs}
+   526→        lang={lang}
+   527→        onOpenChange={(o) => { if (!o) setCreating(null); }}
+   528→        onSaved={() => { setCreating(null); onReload(); }}
+   529→      />
+   530→    </div>
+   531→  );
+   532→}
+   533→
+   534→function modeOfItem(item: GalleryItem): GalleryTab {
+   535→  if (item.isBeforeAfter) return "before-after";
+   536→  if (item.mediaType === "video") return "videos";
+   537→  return "photos";
+   538→}
+   539→
+   540→function GalleryCard({
+   541→  item, lang, index, total, onEdit, onDelete, onToggle, onMove,
+   542→}: {
+   543→  item: GalleryItem;
+   544→  lang: "es" | "en";
+   545→  index: number;
+   546→  total: number;
+   547→  onEdit: () => void;
+   548→  onDelete: () => void;
+   549→  onToggle: (active: boolean) => void;
+   550→  onMove: (dir: -1 | 1) => void;
+   551→}) {
+   552→  const isVideo = item.mediaType === "video";
+   553→  const isBA = item.isBeforeAfter;
+   554→  const badgeLabel = isBA
+   555→    ? (item.pairRole === "before" ? (lang === "en" ? "Before" : "Antes") : (lang === "en" ? "After" : "Después"))
+   556→    : (isVideo ? (lang === "en" ? "Video" : "Video") : (lang === "en" ? "Photo" : "Foto"));
+   557→
+   558→  return (
+   559→    <div className="rounded-lg border border-border overflow-hidden bg-background">
+   560→      <div className="relative aspect-video bg-muted">
+   561→        {isVideo ? (
+   562→          <video
+   563→            src={item.mediaUrl}
+   564→            poster={item.posterUrl ?? undefined}
+   565→            className={`size-full object-cover ${item.active ? "" : "opacity-40 grayscale"}`}
+   566→            muted
+   567→            playsInline
+   568→            preload="metadata"
+   569→          />
+   570→        ) : (
+   571→          <img src={item.mediaUrl} alt={item.captionEs ?? ""} className={`size-full object-cover ${item.active ? "" : "opacity-40 grayscale"}`} />
+   572→        )}
+   573→        <div className="absolute top-1.5 left-1.5 flex gap-1">
+   574→          <Badge variant="secondary" className="text-[9px]">{badgeLabel}</Badge>
+   575→          {!item.active ? <Badge variant="outline" className="text-[9px]">{lang === "en" ? "Hidden" : "Oculto"}</Badge> : null}
+   576→        </div>
+   577→        <div className="absolute top-1.5 right-1.5 flex gap-0.5">
+   578→          <button
+   579→            onClick={() => onMove(-1)}
+   580→            disabled={index === 0}
+   581→            className="size-6 rounded bg-black/50 text-white flex items-center justify-center hover:bg-black/70 disabled:opacity-30"
+   582→            aria-label={lang === "en" ? "Move up" : "Subir"}
+   583→          >
+   584→            <ArrowUp className="size-3" />
+   585→          </button>
+   586→          <button
+   587→            onClick={() => onMove(1)}
+   588→            disabled={index === total - 1}
+   589→            className="size-6 rounded bg-black/50 text-white flex items-center justify-center hover:bg-black/70 disabled:opacity-30"
+   590→            aria-label={lang === "en" ? "Move down" : "Bajar"}
+   591→          >
+   592→            <ArrowDown className="size-3" />
+   593→          </button>
+   594→          <button
+   595→            onClick={onEdit}
+   596→            className="size-6 rounded bg-black/50 text-white flex items-center justify-center hover:bg-black/70"
+   597→            aria-label={lang === "en" ? "Edit" : "Editar"}
+   598→          >
+   599→            <Pencil className="size-3" />
+   600→          </button>
+   601→          <button
+   602→            onClick={onDelete}
+   603→            className="size-6 rounded bg-black/50 text-rose-300 flex items-center justify-center hover:bg-rose-900/70"
+   604→            aria-label={lang === "en" ? "Delete" : "Eliminar"}
+   605→          >
+   606→            <Trash2 className="size-3" />
+   607→          </button>
+   608→        </div>
+   609→      </div>
+   610→      <div className="p-2 flex items-center justify-between gap-2">
+   611→        <p className="text-xs text-muted-foreground truncate flex-1">
+   612→          {lang === "en" ? (item.captionEn ?? item.captionEs ?? "—") : (item.captionEs ?? item.captionEn ?? "—")}
+   613→        </p>
+   614→        <Switch checked={item.active} onCheckedChange={onToggle} aria-label="active" />
+   615→      </div>
+   616→    </div>
+   617→  );
+   618→}
+   619→
+   620→function GalleryItemDialog({
+   621→  open, item, mode, pairs, lang, onOpenChange, onSaved,
+   622→}: {
+   623→  open: boolean;
+   624→  item: GalleryItem | null;
+   625→  mode: GalleryTab;
+   626→  pairs: { pairId: string; before?: GalleryItem; after?: GalleryItem }[];
+   627→  lang: "es" | "en";
+   628→  onOpenChange: (open: boolean) => void;
+   629→  onSaved: () => void;
+   630→}) {
+   631→  const isVideo = mode === "videos" || (item?.mediaType === "video") === true;
+   632→  const isBA = mode === "before-after" || (item?.isBeforeAfter ?? false);
+   633→
+   634→  const [mediaUrl, setMediaUrl] = React.useState<string | null>(null);
+   635→  const [posterUrl, setPosterUrl] = React.useState<string | null>(null);
+   636→  const [captionEs, setCaptionEs] = React.useState("");
+   637→  const [captionEn, setCaptionEn] = React.useState("");
+   638→  const [pairMode, setPairMode] = React.useState<"new" | "existing">("new");
+   639→  const [pairId, setPairId] = React.useState<string>("");
+   640→  const [pairRole, setPairRole] = React.useState<"before" | "after">("before");
+   641→  const [active, setActive] = React.useState(true);
+   642→  const [saving, setSaving] = React.useState(false);
+   643→
+   644→  React.useEffect(() => {
+   645→    if (!open) return;
+   646→    setMediaUrl(item?.mediaUrl ?? null);
+   647→    setPosterUrl(item?.posterUrl ?? null);
+   648→    setCaptionEs(item?.captionEs ?? "");
+   649→    setCaptionEn(item?.captionEn ?? "");
+   650→    if (item?.pairId) {
+   651→      setPairMode("existing");
+   652→      setPairId(item.pairId);
+   653→      setPairRole((item.pairRole === "after" ? "after" : "before"));
+   654→    } else {
+   655→      setPairMode("new");
+   656→      setPairId("");
+   657→      setPairRole("before");
+   658→    }
+   659→    setActive(item?.active ?? true);
+   660→  }, [open, item]);
+   661→
+   662→  const onSave = async () => {
+   663→    if (!mediaUrl) {
+   664→      toast.error(lang === "en" ? "Media is required" : "El medio es obligatorio");
+   665→      return;
+   666→    }
+   667→    if (isBA && pairMode === "existing" && !pairId) {
+   668→      toast.error(lang === "en" ? "Pick a pair" : "Elige un par");
+   669→      return;
+   670→    }
+   671→    setSaving(true);
+   672→    try {
+   673→      const finalPairId = isBA
+   674→        ? (pairMode === "new" ? `pair-${Date.now()}-${Math.random().toString(36).slice(2, 6)}` : pairId)
+   675→        : null;
+   676→      const body = {
+   677→        mediaUrl,
+   678→        mediaType: (isVideo ? "video" : "photo") as "video" | "photo",
+   679→        source: "upload",
+   680→        isBeforeAfter: isBA,
+   681→        pairId: finalPairId,
+   682→        pairRole: isBA ? pairRole : null,
+   683→        captionEs: captionEs.trim() || null,
+   684→        captionEn: captionEn.trim() || null,
+   685→        posterUrl: isVideo ? (posterUrl ?? null) : null,
+   686→        sortOrder: item?.sortOrder ?? 0,
+   687→        active,
+   688→      };
+   689→      if (item) {
+   690→        await adminFetch(`/api/admin/gallery/${item.id}`, { method: "PUT", body: JSON.stringify(body) });
+   691→        toast.success(lang === "en" ? "Item updated" : "Item actualizado");
+   692→      } else {
+   693→        await adminFetch("/api/admin/gallery", { method: "POST", body: JSON.stringify(body) });
+   694→        toast.success(lang === "en" ? "Item created" : "Item creado");
+   695→      }
+   696→      onSaved();
+   697→    } catch (e) {
+   698→      toast.error(lang === "en" ? "Save failed" : "Error al guardar");
+   699→      void e;
+   700→    } finally {
+   701→      setSaving(false);
+   702→    }
+   703→  };
+   704→
+   705→  return (
+   706→    <Dialog open={open} onOpenChange={onOpenChange}>
+   707→      <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-y-auto scroll-thin">
+   708→        <DialogHeader>
+   709→          <DialogTitle>
+   710→            {item
+   711→              ? (lang === "en" ? "Edit gallery item" : "Editar item de galería")
+   712→              : (lang === "en" ? "Add gallery item" : "Añadir item de galería")}
+   713→          </DialogTitle>
+   714→          <DialogDescription>
+   715→            {isBA
+   716→              ? (lang === "en" ? "Before/After pair photo." : "Foto de par Antes/Después.")
+   717→              : isVideo
+   718→                ? (lang === "en" ? "Video reel." : "Video reel.")
+   719→                : (lang === "en" ? "General gallery photo." : "Foto general de galería.")}
+   720→          </DialogDescription>
+   721→        </DialogHeader>
+   722→
+   723→        <div className="flex flex-col gap-4">
+   724→          <MediaDropzone
+   725→            label={isVideo ? (lang === "en" ? "Video file" : "Archivo de video") : (lang === "en" ? "Photo" : "Foto")}
+   726→            value={mediaUrl}
+   727→            mediaType={isVideo ? "video" : "image"}
+   728→            onChange={(url) => setMediaUrl(url)}
+   729→          />
+   730→
+   731→          {isVideo ? (
+   732→            <MediaDropzone
+   733→              label={lang === "en" ? "Poster image (optional)" : "Póster (opcional)"}
+   734→              value={posterUrl}
+   735→              mediaType="image"
+   736→              onChange={(url) => setPosterUrl(url)}
+   737→              compact
+   738→            />
+   739→          ) : null}
+   740→
+   741→          {isBA ? (
+   742→            <div className="flex flex-col gap-3 rounded-md border border-border p-3 bg-muted/30">
+   743→              <Label className="text-xs font-semibold">{lang === "en" ? "Pair assignment" : "Asignación de par"}</Label>
+   744→              <RadioGroup
+   745→                value={pairMode}
+   746→                onValueChange={(v) => setPairMode(v as "new" | "existing")}
+   747→                className="grid grid-cols-2 gap-2"
+   748→              >
+   749→                <label className="flex items-center gap-2 text-sm cursor-pointer">
+   750→                  <RadioGroupItem value="new" />
+   751→                  {lang === "en" ? "New pair" : "Par nuevo"}
+   752→                </label>
+   753→                <label className="flex items-center gap-2 text-sm cursor-pointer">
+   754→                  <RadioGroupItem value="existing" disabled={pairs.length === 0} />
+   755→                  {lang === "en" ? "Existing pair" : "Par existente"}
+   756→                </label>
+   757→              </RadioGroup>
+   758→              {pairMode === "existing" ? (
+   759→                <div className="flex flex-col gap-1.5">
+   760→                  <Label className="text-xs">{lang === "en" ? "Select pair" : "Selecciona par"}</Label>
+   761→                  <select
+   762→                    value={pairId}
+   763→                    onChange={(e) => setPairId(e.target.value)}
+   764→                    className="w-full rounded-md border border-input bg-background px-2.5 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+   765→                  >
+   766→                    <option value="">{lang === "en" ? "— Pick —" : "— Elegir —"}</option>
+   767→                    {pairs.map((p) => (
+   768→                      <option key={p.pairId} value={p.pairId}>
+   769→                        {p.pairId.slice(0, 12)}… ({p.before ? "✓" : "—"}/{p.after ? "✓" : "—"})
+   770→                      </option>
+   771→                    ))}
+   772→                  </select>
+   773→                </div>
+   774→              ) : null}
+   775→              <div className="flex flex-col gap-1.5">
+   776→                <Label className="text-xs">{lang === "en" ? "This photo is the…" : "Esta foto es el…"}</Label>
+   777→                <RadioGroup
+   778→                  value={pairRole}
+   779→                  onValueChange={(v) => setPairRole(v as "before" | "after")}
+   780→                  className="grid grid-cols-2 gap-2"
+   781→                >
+   782→                  <label className="flex items-center gap-2 text-sm cursor-pointer">
+   783→                    <RadioGroupItem value="before" />
+   784→                    {lang === "en" ? "Before" : "Antes"}
+   785→                  </label>
+   786→                  <label className="flex items-center gap-2 text-sm cursor-pointer">
+   787→                    <RadioGroupItem value="after" />
+   788→                    {lang === "en" ? "After" : "Después"}
+   789→                  </label>
+   790→                </RadioGroup>
+   791→              </div>
+   792→            </div>
+   793→          ) : null}
+   794→
+   795→          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+   796→            <div className="flex flex-col gap-1.5">
+   797→              <Label>{lang === "en" ? "Caption (ES)" : "Descripción (ES)"}</Label>
+   798→              <Input value={captionEs} onChange={(e) => setCaptionEs(e.target.value)} />
+   799→            </div>
+   800→            <div className="flex flex-col gap-1.5">
+   801→              <Label>Caption (EN)</Label>
+   802→              <Input value={captionEn} onChange={(e) => setCaptionEn(e.target.value)} />
+   803→            </div>
+   804→          </div>
+   805→
+   806→          <div className="flex items-center gap-2">
+   807→            <Switch id="gi-active" checked={active} onCheckedChange={setActive} />
+   808→            <Label htmlFor="gi-active">{lang === "en" ? "Visible on site" : "Visible en el sitio"}</Label>
+   809→          </div>
+   810→        </div>
+   811→
+   812→        <DialogFooter>
+   813→          <DialogClose asChild>
+   814→            <Button variant="outline" disabled={saving}>{lang === "en" ? "Cancel" : "Cancelar"}</Button>
+   815→          </DialogClose>
+   816→          <Button onClick={() => void onSave()} disabled={saving}>
+   817→            {saving ? <Spinner className="mr-2" /> : null}
+   818→            {item ? (lang === "en" ? "Save" : "Guardar") : (lang === "en" ? "Create" : "Crear")}
+   819→          </Button>
+   820→        </DialogFooter>
+   821→      </DialogContent>
+   822→    </Dialog>
+   823→  );
+   824→}
+   825→
+   826→function HoursEditor({
+   827→  business, lang, saving, onChange, onSave,
+   828→}: {
+   829→  business: Business;
+   830→  lang: "es" | "en";
+   831→  saving: boolean;
+   832→  onChange: (b: Business) => void;
+   833→  onSave: () => void;
+   834→}) {
+   835→  const hours: OpeningHours = business.openingHours ?? {};
+   836→  const upd = (day: typeof DAY_KEYS_RAW[number], field: "open" | "close", value: string) => {
+   837→    const next: OpeningHours = { ...hours, [day]: { ...(hours[day] ?? { open: null, close: null }), [field]: value || null } };
+   838→    onChange({ ...business, openingHours: next });
+   839→  };
+   840→
+   841→  return (
+   842→    <div className="flex flex-col gap-4">
+   843→      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+   844→        {DAY_KEYS_RAW.map((day, i) => {
+   845→          const h = hours[day] ?? { open: null, close: null };
+   846→          return (
+   847→            <div key={day} className="flex items-center gap-2 rounded-md border border-border px-3 py-2">
+   848→              <span className="text-sm font-medium w-24 shrink-0">{lang === "en" ? DAY_LABELS_EN[i] : DAY_LABELS_ES[i]}</span>
+   849→              <Separator orientation="vertical" className="h-6" />
+   850→              <Input type="time" value={h.open ?? ""} onChange={(e) => upd(day, "open", e.target.value)} className="h-8 w-28" aria-label={`${day} open`} />
+   851→              <span className="text-xs text-muted-foreground">–</span>
+   852→              <Input type="time" value={h.close ?? ""} onChange={(e) => upd(day, "close", e.target.value)} className="h-8 w-28" aria-label={`${day} close`} />
+   853→            </div>
+   854→          );
+   855→        })}
+   856→      </div>
+   857→      <Button onClick={onSave} disabled={saving} className="self-start">
+   858→        {saving ? <Spinner className="mr-2" /> : <Save className="size-4" />}
+   859→        {lang === "en" ? "Save hours" : "Guardar horario"}
+   860→      </Button>
+   861→    </div>
+   862→  );
+   863→}
+   864→

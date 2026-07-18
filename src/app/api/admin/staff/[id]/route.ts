@@ -23,6 +23,19 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   return json(updated);
 }
 
+export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const businessId = await getBusinessId();
+  if (!businessId) return json({ error: "not_configured" }, 404);
+  const { id } = await params;
+  const existing = await db.staffMember.findFirst({ where: { id, businessId } });
+  if (!existing) return json({ error: "not_found" }, 404);
+  await db.staffMember.delete({ where: { id } });
+  await db.auditLog.create({
+    data: { businessId, actorName: "Owner", action: `Eliminó personal "${existing.name}"`, tableName: "staff_members", recordId: id },
+  });
+  return json({ ok: true });
+}
+
 export const dynamic = "force-dynamic";
 export function generateStaticParams() {
   return [];

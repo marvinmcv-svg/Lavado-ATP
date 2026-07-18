@@ -52,6 +52,9 @@ export interface SiteSettings {
   heroHeadlineEn: string;
   heroSubheadlineEs: string;
   heroSubheadlineEn: string;
+  heroImageUrl: string | null;
+  heroVideoUrl: string | null;
+  heroVideoPosterUrl: string | null;
   ctaTextEs: string;
   ctaTextEn: string;
   announcementBarTextEs: string | null;

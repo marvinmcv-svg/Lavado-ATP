@@ -2,7 +2,7 @@
 // Module 4.10 — Settings: WhatsApp phone + greeting, service-area mode + zones, quote tiers,
 // language default, timezone, currency, GA/Pixel IDs.
 import * as React from "react";
-import { Save, Settings as SettingsIcon, MessageCircle, MapPin, Calculator, Globe, BarChart } from "lucide-react";
+import { Save, Settings as SettingsIcon, MessageCircle, MapPin, Calculator, Globe, BarChart, Building2 } from "lucide-react";
 import { useLang, t } from "@/lib/i18n";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -68,6 +68,9 @@ export function Settings({ data }: { data: PublicData }) {
         body: JSON.stringify({
           business: {
             phone: business.phone,
+            address: business.address,
+            googleMapsUrl: business.googleMapsUrl,
+            instagramUrl: business.instagramUrl,
             timezone: business.timezone,
             currency: business.currency,
             serviceArea: business.serviceArea,
@@ -146,6 +149,28 @@ export function Settings({ data }: { data: PublicData }) {
               <Label>Greeting (EN)</Label>
               <Textarea rows={2} value={settings.whatsappGreetingEn} onChange={(e) => setSettings({ ...settings, whatsappGreetingEn: e.target.value })} />
             </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Business profile (Task ID 6 — address / maps / instagram) */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2"><Building2 className="size-4 text-primary" />{lang === "en" ? "Business profile" : "Perfil del negocio"}</CardTitle>
+          <CardDescription>{lang === "en" ? "Address, maps, and social links." : "Dirección, mapas y redes sociales."}</CardDescription>
+        </CardHeader>
+        <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="flex flex-col gap-1.5 sm:col-span-2">
+            <Label>{lang === "en" ? "Address" : "Dirección"}</Label>
+            <Input value={business.address ?? ""} onChange={(e) => setBusiness({ ...business, address: e.target.value })} placeholder={lang === "en" ? "Av. San Martín 1234, Santa Cruz" : "Av. San Martín 1234, Santa Cruz"} />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <Label>{lang === "en" ? "Google Maps URL" : "URL de Google Maps"}</Label>
+            <Input value={business.googleMapsUrl ?? ""} onChange={(e) => setBusiness({ ...business, googleMapsUrl: e.target.value })} placeholder="https://maps.app.goo.gl/..." />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <Label>Instagram URL</Label>
+            <Input value={business.instagramUrl ?? ""} onChange={(e) => setBusiness({ ...business, instagramUrl: e.target.value })} placeholder="https://instagram.com/lavadoatp" />
           </div>
         </CardContent>
       </Card>

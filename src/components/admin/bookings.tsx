@@ -203,6 +203,7 @@ export function Bookings({ data }: { data: PublicData }) {
         open={creating}
         lang={lang}
         services={services}
+        staff={staff}
         defaultDate={weekStart}
         onOpenChange={(o) => setCreating(o)}
         onCreated={() => { setCreating(false); void reload(); }}
@@ -224,7 +225,8 @@ function BookingRow({
   const svcName = svc ? (lang === "en" ? svc.nameEn : svc.nameEs) : (lang === "en" ? "General" : "General");
   const time = new Date(booking.scheduledAt).toLocaleTimeString("es-BO", { hour: "2-digit", minute: "2-digit" });
   const next = nextStatus(booking.status);
-  const crewOptions = staff.filter((s) => s.active);
+  // Crew dropdown shows only active staff with role=crew (Task ID 6 verification)
+  const crewOptions = staff.filter((s) => s.active && s.role === "crew");
 
   const waUrl = (() => {
     const phone = booking.customerPhone;
@@ -307,11 +309,12 @@ function BookingRow({
 }
 
 function NewBookingDialog({
-  open, lang, services, defaultDate, onOpenChange, onCreated,
+  open, lang, services, staff, defaultDate, onOpenChange, onCreated,
 }: {
   open: boolean;
   lang: "es" | "en";
   services: Service[];
+  staff: StaffMember[];
   defaultDate: Date;
   onOpenChange: (open: boolean) => void;
   onCreated: () => void;
@@ -324,6 +327,8 @@ function NewBookingDialog({
   const [crew, setCrew] = React.useState("");
   const [quoted, setQuoted] = React.useState("");
   const [zone, setZone] = React.useState("");
+  const [sizeSqm, setSizeSqm] = React.useState("");
+  const [specialRequests, setSpecialRequests] = React.useState("");
   const [saving, setSaving] = React.useState(false);
 
   React.useEffect(() => {
@@ -332,7 +337,7 @@ function NewBookingDialog({
     const d = new Date(defaultDate);
     d.setHours(9, 0, 0, 0);
     setScheduledAt(d.toISOString().slice(0, 16));
-    setCrew(""); setQuoted(""); setZone("");
+    setCrew(""); setQuoted(""); setZone(""); setSizeSqm(""); setSpecialRequests("");
   }, [open, defaultDate]);
 
   const onSave = async () => {
@@ -349,10 +354,12 @@ function NewBookingDialog({
           customerPhone: phone.trim(),
           serviceId: serviceId || null,
           propertyAddress: address.trim(),
+          propertySizeSqm: sizeSqm.trim() === "" ? null : Number(sizeSqm),
           scheduledAt: new Date(scheduledAt).toISOString(),
           crewAssigned: crew || null,
           quotedAmount: quoted.trim() === "" ? null : Number(quoted),
           zone: zone.trim() || null,
+          specialRequests: specialRequests.trim() || null,
         }),
       });
       toast.success(lang === "en" ? "Booking created" : "Reserva creada");
@@ -405,8 +412,27 @@ function NewBookingDialog({
             <Input value={zone} onChange={(e) => setZone(e.target.value)} placeholder="Equipetrol" />
           </div>
           <div className="flex flex-col gap-1.5">
+            <Label>{lang === "en" ? "Crew" : "Equipo"}</Label>
+            <Select value={crew} onValueChange={setCrew}>
+              <SelectTrigger className="w-full"><SelectValue placeholder={lang === "en" ? "Unassigned" : "Sin asignar"} /></SelectTrigger>
+              <SelectContent>
+                {staff.filter((s) => s.active && s.role === "crew").map((s) => (
+                  <SelectItem key={s.id} value={s.name}>{s.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex flex-col gap-1.5">
             <Label>{lang === "en" ? "Quoted amount" : "Monto cotizado"}</Label>
             <Input type="number" value={quoted} onChange={(e) => setQuoted(e.target.value)} />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <Label>{lang === "en" ? "Property size (m²)" : "Tamaño (m²)"}</Label>
+            <Input type="number" value={sizeSqm} onChange={(e) => setSizeSqm(e.target.value)} placeholder="120" />
+          </div>
+          <div className="flex flex-col gap-1.5 sm:col-span-2">
+            <Label>{lang === "en" ? "Special requests" : "Solicitudes especiales"}</Label>
+            <Textarea value={specialRequests} onChange={(e) => setSpecialRequests(e.target.value)} rows={2} placeholder={lang === "en" ? "Notes for the crew…" : "Notas para el equipo…"} />
           </div>
         </div>
         <DialogFooter>

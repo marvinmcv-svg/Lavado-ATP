@@ -1,7 +1,7 @@
 "use client";
 // Module 4.9 — Staff: list with role badges, active toggle, role change dropdown, invite form.
 import * as React from "react";
-import { Shield, UserPlus, RefreshCw, Mail } from "lucide-react";
+import { Shield, UserPlus, RefreshCw, Mail, Trash2 } from "lucide-react";
 import { useLang, t } from "@/lib/i18n";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -74,6 +74,19 @@ export function Staff() {
       void e;
     } finally {
       setInviting(false);
+    }
+  };
+
+  const handleDelete = async (m: StaffMember) => {
+    if (!window.confirm(lang === "en" ? `Remove "${m.name}" from staff?` : `¿Eliminar "${m.name}" del personal?`)) return;
+    setStaff((prev) => prev.filter((it) => it.id !== m.id));
+    try {
+      await adminFetch(`/api/admin/staff/${m.id}`, { method: "DELETE" });
+      toast.success(lang === "en" ? "Staff member removed" : "Personal eliminado");
+    } catch (e) {
+      toast.error(lang === "en" ? "Delete failed" : "Error al eliminar");
+      void e;
+      void reload();
     }
   };
 
@@ -160,6 +173,15 @@ export function Staff() {
                       onCheckedChange={(v) => void updateMember(m.id, { active: v }, v ? (lang === "en" ? "Activated" : "Activado") : (lang === "en" ? "Deactivated" : "Desactivado"))}
                       aria-label="active"
                     />
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={() => void handleDelete(m)}
+                      aria-label={lang === "en" ? "Delete" : "Eliminar"}
+                      className="text-destructive hover:text-destructive"
+                    >
+                      <Trash2 className="size-4" />
+                    </Button>
                   </div>
                 </li>
               ))}

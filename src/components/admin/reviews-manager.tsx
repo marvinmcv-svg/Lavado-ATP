@@ -1,7 +1,8 @@
 "use client";
-// Module 4.8 — Reviews: list with visible toggle (optimistic), flag, reply draft, request-review link.
+// Module 4.8 — Reviews: list with visible toggle (optimistic), flag, reply draft,
+// request-review link, + Task ID 6: "Nueva reseña" create dialog.
 import * as React from "react";
-import { Star, Flag, Eye, EyeOff, MessageCircle, RefreshCw, Send } from "lucide-react";
+import { Star, Flag, Eye, EyeOff, MessageCircle, RefreshCw, Send, Plus } from "lucide-react";
 import { useLang, t } from "@/lib/i18n";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,6 +13,12 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
+import {
+  Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
+} from "@/components/ui/select";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose,
+} from "@/components/ui/dialog";
 import { adminFetch, LoadingBlock, EmptyState, Spinner, fmtDate } from "./_shared";
 import { buildWhatsAppUrl, normalizePhone, reviewRequestMessage } from "@/lib/whatsapp";
 import type { PublicData } from "@/lib/public-data";
@@ -19,10 +26,13 @@ import type { Review } from "@/lib/types";
 
 interface ReviewsResponse { reviews: Review[] }
 
+type ReviewSource = "google" | "facebook" | "manual";
+
 export function ReviewsManager({ data }: { data: PublicData }) {
   const lang = useLang((s) => s.lang);
   const [reviews, setReviews] = React.useState<Review[]>([]);
   const [loading, setLoading] = React.useState(true);
+  const [creating, setCreating] = React.useState(false);
   const [reqName, setReqName] = React.useState("");
   const [reqPhone, setReqPhone] = React.useState("");
   const [reqLink, setReqLink] = React.useState("https://g.page/r/lavadoatp/review");
@@ -64,7 +74,10 @@ export function ReviewsManager({ data }: { data: PublicData }) {
             {reviews.length} {lang === "en" ? "reviews" : "reseñas"} · {lang === "en" ? "avg" : "prom"} {avgRating.toFixed(1)}
           </p>
         </div>
-        <Button variant="outline" size="sm" onClick={() => void reload()}><RefreshCw className="size-4" />{lang === "en" ? "Refresh" : "Actualizar"}</Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={() => void reload()}><RefreshCw className="size-4" />{lang === "en" ? "Refresh" : "Actualizar"}</Button>
+          <Button size="sm" onClick={() => setCreating(true)}><Plus className="size-4" />{lang === "en" ? "New review" : "Nueva reseña"}</Button>
+        </div>
       </div>
 
       {/* Request review generator */}
@@ -115,6 +128,14 @@ export function ReviewsManager({ data }: { data: PublicData }) {
       <p className="text-xs text-muted-foreground text-center">
         {data.business?.name ?? "lavadoatp"}
       </p>
+
+      {/* Task ID 6 — Create dialog */}
+      <NewReviewDialog
+        open={creating}
+        lang={lang}
+        onOpenChange={(o) => setCreating(o)}
+        onCreated={() => { setCreating(false); void reload(); }}
+      />
     </div>
   );
 }
@@ -189,5 +210,124 @@ function ReviewCard({
         </div>
       </CardContent>
     </Card>
+  );
+}
+
+function NewReviewDialog({
+  open, lang, onOpenChange, onCreated,
+}: {
+  open: boolean;
+  lang: "es" | "en";
+  onOpenChange: (open: boolean) => void;
+  onCreated: () => void;
+}) {
+  const [reviewerName, setReviewerName] = React.useState("");
+  const [starRating, setStarRating] = React.useState(5);
+  const [reviewText, setReviewText] = React.useState("");
+  const [reviewDate, setReviewDate] = React.useState("");
+  const [source, setSource] = React.useState<ReviewSource>("manual");
+  const [visibleOnSite, setVisibleOnSite] = React.useState(true);
+  const [saving, setSaving] = React.useState(false);
+
+  React.useEffect(() => {
+    if (!open) return;
+    setReviewerName("");
+    setStarRating(5);
+    setReviewText("");
+    setReviewDate(new Date().toISOString().slice(0, 10));
+    setSource("manual");
+    setVisibleOnSite(true);
+  }, [open]);
+
+  const onSave = async () => {
+    if (!reviewerName.trim() || !reviewText.trim()) {
+      toast.error(lang === "en" ? "Name and text required" : "Nombre y texto requeridos");
+      return;
+    }
+    setSaving(true);
+    try {
+      await adminFetch("/api/admin/reviews", {
+        method: "POST",
+        body: JSON.stringify({
+          reviewerName: reviewerName.trim(),
+          starRating,
+          reviewText: reviewText.trim(),
+          reviewDate: reviewDate ? new Date(reviewDate).toISOString() : new Date().toISOString(),
+          source,
+          visibleOnSite,
+        }),
+      });
+      toast.success(lang === "en" ? "Review created" : "Reseña creada");
+      onCreated();
+    } catch (e) {
+      toast.error(lang === "en" ? "Create failed" : "Error al crear");
+      void e;
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle>{lang === "en" ? "New review" : "Nueva reseña"}</DialogTitle>
+          <DialogDescription>{lang === "en" ? "Manually add a customer review." : "Agrega manualmente una reseña de cliente."}</DialogDescription>
+        </DialogHeader>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="flex flex-col gap-1.5 sm:col-span-2">
+            <Label>{lang === "en" ? "Reviewer name" : "Nombre del revisor"}</Label>
+            <Input value={reviewerName} onChange={(e) => setReviewerName(e.target.value)} placeholder="María Pérez" />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <Label>{lang === "en" ? "Star rating" : "Calificación"}</Label>
+            <Select value={String(starRating)} onValueChange={(v) => setStarRating(Number(v))}>
+              <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {[5, 4, 3, 2, 1].map((n) => (
+                  <SelectItem key={n} value={String(n)}>
+                    {"★".repeat(n)}{"☆".repeat(5 - n)} ({n})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <Label>{lang === "en" ? "Source" : "Origen"}</Label>
+            <Select value={source} onValueChange={(v) => setSource(v as ReviewSource)}>
+              <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="google">Google</SelectItem>
+                <SelectItem value="facebook">Facebook</SelectItem>
+                <SelectItem value="manual">{lang === "en" ? "Manual" : "Manual"}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <Label>{lang === "en" ? "Date" : "Fecha"}</Label>
+            <Input type="date" value={reviewDate} onChange={(e) => setReviewDate(e.target.value)} />
+          </div>
+          <div className="flex flex-col gap-1.5 sm:col-span-2">
+            <Label>{lang === "en" ? "Review text" : "Texto de la reseña"}</Label>
+            <Textarea value={reviewText} onChange={(e) => setReviewText(e.target.value)} rows={3} />
+          </div>
+          <div className="flex items-center gap-2 sm:col-span-2">
+            <Switch id="rev-visible" checked={visibleOnSite} onCheckedChange={setVisibleOnSite} />
+            <Label htmlFor="rev-visible">{lang === "en" ? "Visible on site" : "Visible en el sitio"}</Label>
+          </div>
+        </div>
+
+        <DialogFooter>
+          <DialogClose asChild>
+            <Button variant="outline" disabled={saving}>{lang === "en" ? "Cancel" : "Cancelar"}</Button>
+          </DialogClose>
+          <Button onClick={() => void onSave()} disabled={saving}>
+            {saving ? <Spinner className="mr-2" /> : null}
+            {lang === "en" ? "Create" : "Crear"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

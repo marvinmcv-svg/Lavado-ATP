@@ -1,5 +1,6 @@
 "use client";
 // Module 4.2 — Services Manager: grouped list, CRUD, dnd-kit reorder, before/after photos, optimistic available.
+// Task ID 6 — upgraded: MediaDropzone uploads + inline category manager (CRUD) + videoPosterUrl field.
 import * as React from "react";
 import {
   DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, type DragEndEvent,
@@ -8,16 +9,17 @@ import {
   arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { GripVertical, Plus, Pencil, Trash2, Wrench } from "lucide-react";
+import { GripVertical, Plus, Pencil, Trash2, Wrench, FolderPlus } from "lucide-react";
 import { useLang, t } from "@/lib/i18n";
 import { toast } from "sonner";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 import {
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
 } from "@/components/ui/select";
@@ -25,6 +27,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose,
 } from "@/components/ui/dialog";
 import { adminFetch, LoadingBlock, EmptyState, Spinner, fmtMoney } from "./_shared";
+import { MediaDropzone } from "./media-dropzone";
 import type { PublicData } from "@/lib/public-data";
 import type { Service, ServiceCategory, PriceType } from "@/lib/types";
 
@@ -144,10 +147,13 @@ export function ServicesManager({ data }: { data: PublicData }) {
         </Button>
       </div>
 
+      {/* Category manager (Task ID 6 — inline CRUD) */}
+      <CategoriesManager categories={categories} lang={lang} onChanged={() => void reload()} />
+
       {loading ? (
         <Card><CardContent><LoadingBlock rows={5} /></CardContent></Card>
       ) : categories.length === 0 ? (
-        <Card><CardContent><EmptyState title={lang === "en" ? "No categories" : "Sin categorías"} /></CardContent></Card>
+        <Card><CardContent><EmptyState title={lang === "en" ? "No categories yet — create one above" : "Crea una categoría arriba"} /></CardContent></Card>
       ) : (
         <div className="flex flex-col gap-6">
           {categories.map((cat) => {
@@ -213,6 +219,157 @@ export function ServicesManager({ data }: { data: PublicData }) {
         onSaved={() => { setCreating(false); void reload(); }}
       />
     </div>
+  );
+}
+
+/** Task ID 6 — Inline category CRUD: add / edit names / delete (409 → toast). */
+function CategoriesManager({
+  categories, lang, onChanged,
+}: {
+  categories: ServiceCategory[];
+  lang: "es" | "en";
+  onChanged: () => void;
+}) {
+  const [newEs, setNewEs] = React.useState("");
+  const [newEn, setNewEn] = React.useState("");
+  const [adding, setAdding] = React.useState(false);
+
+  const add = async () => {
+    if (!newEs.trim() || !newEn.trim()) {
+      toast.error(lang === "en" ? "Both names required" : "Ambos nombres requeridos");
+      return;
+    }
+    setAdding(true);
+    try {
+      await adminFetch("/api/admin/categories", {
+        method: "POST",
+        body: JSON.stringify({ nameEs: newEs.trim(), nameEn: newEn.trim(), sortOrder: categories.length, active: true }),
+      });
+      toast.success(lang === "en" ? "Category created" : "Categoría creada");
+      setNewEs(""); setNewEn("");
+      onChanged();
+    } catch (e) {
+      toast.error(lang === "en" ? "Failed to create category" : "Error al crear categoría");
+      void e;
+    } finally {
+      setAdding(false);
+    }
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base flex items-center gap-2">
+          <FolderPlus className="size-4 text-primary" />
+          {lang === "en" ? "Categories" : "Categorías"}
+        </CardTitle>
+        <CardDescription>
+          {lang === "en"
+            ? "Add, rename, or delete service categories. Delete is blocked if a category has services."
+            : "Agrega, renombra o elimina categorías. No se puede eliminar una categoría con servicios."}
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        {categories.length === 0 ? (
+          <EmptyState title={lang === "en" ? "No categories yet" : "Sin categorías"} hint={lang === "en" ? "Add the first one below." : "Agrega la primera abajo."} />
+        ) : (
+          <ul className="flex flex-col gap-2 mb-4">
+            {categories.map((cat) => (
+              <CategoryRow key={cat.id} cat={cat} lang={lang} onChanged={onChanged} />
+            ))}
+          </ul>
+        )}
+        <Separator className="my-3" />
+        <div className="grid grid-cols-1 sm:grid-cols-[1fr_1fr_auto] gap-2 items-end">
+          <div className="flex flex-col gap-1.5">
+            <Label className="text-xs">{lang === "en" ? "Name (ES)" : "Nombre (ES)"}</Label>
+            <Input value={newEs} onChange={(e) => setNewEs(e.target.value)} placeholder="Ej. Lavado residencial" />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <Label className="text-xs">Name (EN)</Label>
+            <Input value={newEn} onChange={(e) => setNewEn(e.target.value)} placeholder="e.g. Residential washing" />
+          </div>
+          <Button onClick={() => void add()} disabled={adding} className="h-9">
+            {adding ? <Spinner className="mr-2" /> : <Plus className="size-4" />}
+            {lang === "en" ? "Add category" : "Añadir categoría"}
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function CategoryRow({
+  cat, lang, onChanged,
+}: {
+  cat: ServiceCategory;
+  lang: "es" | "en";
+  onChanged: () => void;
+}) {
+  const [nameEs, setNameEs] = React.useState(cat.nameEs);
+  const [nameEn, setNameEn] = React.useState(cat.nameEn);
+  const [saving, setSaving] = React.useState(false);
+  React.useEffect(() => { setNameEs(cat.nameEs); setNameEn(cat.nameEn); }, [cat.id, cat.nameEs, cat.nameEn]);
+  const dirty = nameEs.trim() !== cat.nameEs || nameEn.trim() !== cat.nameEn;
+
+  const save = async () => {
+    if (!dirty) return;
+    setSaving(true);
+    try {
+      await adminFetch(`/api/admin/categories/${cat.id}`, {
+        method: "PUT",
+        body: JSON.stringify({ nameEs: nameEs.trim(), nameEn: nameEn.trim() }),
+      });
+      toast.success(lang === "en" ? "Category updated" : "Categoría actualizada");
+      onChanged();
+    } catch (e) {
+      toast.error(lang === "en" ? "Save failed" : "Error al guardar");
+      void e;
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const del = async () => {
+    if (!window.confirm(lang === "en" ? `Delete category "${cat.nameEs}"?` : `¿Eliminar categoría "${cat.nameEs}"?`)) return;
+    try {
+      const res = await fetch(`/api/admin/categories/${cat.id}`, { method: "DELETE" });
+      if (res.status === 409) {
+        const body = await res.json().catch(() => ({}));
+        toast.error(
+          lang === "en"
+            ? `Cannot delete: has ${body.count ?? ""} services`
+            : `No se puede eliminar: tiene ${body.count ?? ""} servicios`,
+        );
+        return;
+      }
+      if (!res.ok) throw new Error("delete_failed");
+      toast.success(lang === "en" ? "Category deleted" : "Categoría eliminada");
+      onChanged();
+    } catch (e) {
+      toast.error(lang === "en" ? "Delete failed" : "Error al eliminar");
+      void e;
+    }
+  };
+
+  return (
+    <li className="grid grid-cols-1 sm:grid-cols-[1fr_1fr_auto_auto] gap-2 items-center rounded-md border border-border px-3 py-2">
+      <div className="flex flex-col gap-0.5">
+        <span className="text-[10px] text-muted-foreground sm:hidden">ES</span>
+        <Input value={nameEs} onChange={(e) => setNameEs(e.target.value)} className="h-8" aria-label="Nombre ES" />
+      </div>
+      <div className="flex flex-col gap-0.5">
+        <span className="text-[10px] text-muted-foreground sm:hidden">EN</span>
+        <Input value={nameEn} onChange={(e) => setNameEn(e.target.value)} className="h-8" aria-label="Name EN" />
+      </div>
+      <Button size="sm" variant="outline" onClick={() => void save()} disabled={!dirty || saving} className="h-8">
+        {saving ? <Spinner /> : null}
+        {lang === "en" ? "Save" : "Guardar"}
+      </Button>
+      <Button size="icon" variant="ghost" onClick={() => void del()} aria-label="delete" className="text-destructive hover:text-destructive">
+        <Trash2 className="size-4" />
+      </Button>
+    </li>
   );
 }
 
@@ -290,8 +447,9 @@ function ServiceEditDialog({
   const [currency, setCurrency] = React.useState("BOB");
   const [available, setAvailable] = React.useState(true);
   const [categoryId, setCategoryId] = React.useState("");
-  const [beforePhoto, setBeforePhoto] = React.useState("");
-  const [afterPhoto, setAfterPhoto] = React.useState("");
+  const [beforePhoto, setBeforePhoto] = React.useState<string | null>(null);
+  const [afterPhoto, setAfterPhoto] = React.useState<string | null>(null);
+  const [videoPoster, setVideoPoster] = React.useState<string | null>(null);
   const [saving, setSaving] = React.useState(false);
 
   // sync form when opened
@@ -306,8 +464,9 @@ function ServiceEditDialog({
     setCurrency(service?.currency ?? "BOB");
     setAvailable(service?.available ?? true);
     setCategoryId(service?.categoryId ?? categories[0]?.id ?? "");
-    setBeforePhoto(service?.beforePhotoUrl ?? "");
-    setAfterPhoto(service?.afterPhotoUrl ?? "");
+    setBeforePhoto(service?.beforePhotoUrl ?? null);
+    setAfterPhoto(service?.afterPhotoUrl ?? null);
+    setVideoPoster(service?.videoPosterUrl ?? null);
   }, [open, service, categories]);
 
   const onSave = async () => {
@@ -325,8 +484,10 @@ function ServiceEditDialog({
         price: price.trim() === "" ? null : Number(price),
         currency,
         available,
-        beforePhotoUrl: beforePhoto.trim() || null,
-        afterPhotoUrl: afterPhoto.trim() || null,
+        // Send empty string (not null) so PUT can clear existing values
+        beforePhotoUrl: beforePhoto ?? "",
+        afterPhotoUrl: afterPhoto ?? "",
+        videoPosterUrl: videoPoster ?? "",
       };
       if (isEdit && service) {
         await adminFetch(`/api/admin/services/${service.id}`, { method: "PUT", body: JSON.stringify(body) });
@@ -417,26 +578,29 @@ function ServiceEditDialog({
               </SelectContent>
             </Select>
           </div>
-          <div className="flex flex-col gap-1.5 sm:col-span-2">
-            <Label>{lang === "en" ? "Before photo URL" : "URL foto Antes"}</Label>
-            <Input value={beforePhoto} onChange={(e) => setBeforePhoto(e.target.value)} placeholder="https://..." />
+
+          {/* Task ID 6 — MediaDropzone for before / after / video poster */}
+          <div className="sm:col-span-2 grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2 border-t border-border">
+            <MediaDropzone
+              label={lang === "en" ? "Before photo" : "Foto Antes"}
+              value={beforePhoto}
+              mediaType="image"
+              onChange={(url) => setBeforePhoto(url)}
+            />
+            <MediaDropzone
+              label={lang === "en" ? "After photo" : "Foto Después"}
+              value={afterPhoto}
+              mediaType="image"
+              onChange={(url) => setAfterPhoto(url)}
+            />
+            <MediaDropzone
+              label={lang === "en" ? "Video poster" : "Póster de video"}
+              value={videoPoster}
+              mediaType="image"
+              onChange={(url) => setVideoPoster(url)}
+            />
           </div>
-          <div className="flex flex-col gap-1.5 sm:col-span-2">
-            <Label>{lang === "en" ? "After photo URL" : "URL foto Después"}</Label>
-            <Input value={afterPhoto} onChange={(e) => setAfterPhoto(e.target.value)} placeholder="https://..." />
-          </div>
-          {beforePhoto || afterPhoto ? (
-            <div className="sm:col-span-2 grid grid-cols-2 gap-2">
-              {beforePhoto ? (
-                 
-                <img src={beforePhoto} alt="before" className="aspect-video w-full rounded-md object-cover border border-border" />
-              ) : null}
-              {afterPhoto ? (
-                 
-                <img src={afterPhoto} alt="after" className="aspect-video w-full rounded-md object-cover border border-border" />
-              ) : null}
-            </div>
-          ) : null}
+
           <div className="flex items-center gap-2 sm:col-span-2">
             <Switch id="avail" checked={available} onCheckedChange={setAvailable} />
             <Label htmlFor="avail">{lang === "en" ? "Available on site" : "Disponible en el sitio"}</Label>

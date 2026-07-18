@@ -1,10 +1,9 @@
 "use client";
-// Hero (Step 3.1) — real before/after photo as full-bleed background,
-// headline from settings, WhatsApp CTA above the fold, trust stats.
+// Hero (Step 3.1) — mobile uses video (if set), desktop uses image.
+// Headline + CTA from settings, WhatsApp CTA above the fold, trust stats.
 import { Droplets, Star, Clock, Zap, ChevronDown } from "lucide-react";
 import { useLang } from "@/lib/i18n";
 import { buildWhatsAppUrl, normalizePhone } from "@/lib/whatsapp";
-import { Button } from "@/components/ui/button";
 import type { Business, SiteSettings, Review } from "@/lib/types";
 
 export function Hero({
@@ -25,6 +24,11 @@ export function Hero({
   const cta = lang === "en" ? settings?.ctaTextEn : settings?.ctaTextEs;
   const greeting = lang === "en" ? settings?.whatsappGreetingEn : settings?.whatsappGreetingEs;
 
+  // Mobile hero video (admin-configurable). Desktop keeps the image.
+  const heroVideoUrl = settings?.heroVideoUrl ?? null;
+  const heroVideoPoster = settings?.heroVideoPosterUrl ?? heroImage;
+  const desktopImage = settings?.heroImageUrl ?? heroImage;
+
   const avgRating = reviews.length > 0 ? reviews.reduce((s, r) => s + r.starRating, 0) / reviews.length : 5;
 
   const onCta = () => {
@@ -37,22 +41,37 @@ export function Hero({
     <section id="top" className="relative isolate overflow-hidden">
       {/* Background media */}
       <div className="absolute inset-0 -z-10">
-        {heroImage ? (
-          <>
-            <img
-              src={heroImage}
-              alt=""
-              className="size-full object-cover"
-              fetchPriority="high"
-            />
-            <div className="absolute inset-0 bg-gradient-to-br from-primary/85 via-primary/55 to-black/60" />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
-          </>
-        ) : (
+        {/* Mobile: video (if set) */}
+        {heroVideoUrl && (
+          <video
+            className="absolute inset-0 size-full object-cover md:hidden"
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="metadata"
+            poster={heroVideoPoster ?? undefined}
+            aria-hidden="true"
+          >
+            <source src={heroVideoUrl} type="video/mp4" />
+          </video>
+        )}
+        {/* Desktop: image (or video if no image set) */}
+        {desktopImage ? (
+          <img
+            src={desktopImage}
+            alt=""
+            className={`size-full object-cover ${heroVideoUrl ? "hidden md:block" : ""}`}
+            fetchPriority="high"
+          />
+        ) : heroVideoUrl ? null : (
           <div className="size-full bg-water-texture bg-primary">
             <div className="absolute inset-0 bg-gradient-to-br from-primary/90 to-primary/70" />
           </div>
         )}
+        {/* Overlays (always on top of whichever media is showing) */}
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/85 via-primary/55 to-black/60" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
       </div>
 
       <div className="container mx-auto px-4 sm:px-6 pt-20 pb-16 sm:pt-28 sm:pb-24 lg:pt-36 lg:pb-32 min-h-[88vh] flex flex-col justify-center">
