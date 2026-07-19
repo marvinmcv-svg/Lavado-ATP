@@ -63,9 +63,13 @@ export function AdminPortal({ data, onExit }: { data: PublicData; onExit: () => 
     <div className="flex h-full flex-col">
       {/* Brand */}
       <div className="flex items-center gap-2.5 px-5 py-5 border-b border-sidebar-border">
-        <span className="flex size-9 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-md">
-          <Droplets className="size-5" />
-        </span>
+        {data.business?.logoUrl ? (
+          <img src={data.business.logoUrl} alt="lavadoatp" className="size-10 rounded-lg object-cover shadow-md" />
+        ) : (
+          <span className="flex size-9 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-md">
+            <Droplets className="size-5" />
+          </span>
+        )}
         <div className="flex flex-col leading-tight">
           <span className="font-extrabold text-base tracking-tight">
             lavado<span className="text-primary">atp</span>
@@ -146,9 +150,13 @@ export function AdminPortal({ data, onExit }: { data: PublicData; onExit: () => 
             </SheetContent>
           </Sheet>
           <div className="flex items-center gap-2">
-            <span className="flex size-7 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-              <Droplets className="size-4" />
-            </span>
+            {data.business?.logoUrl ? (
+              <img src={data.business.logoUrl} alt="lavadoatp" className="size-8 rounded-lg object-cover" />
+            ) : (
+              <span className="flex size-7 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+                <Droplets className="size-4" />
+              </span>
+            )}
             <span className="font-extrabold text-sm tracking-tight">
               lavado<span className="text-primary">atp</span>
             </span>

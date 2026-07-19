@@ -6,6 +6,7 @@ import { useLang, t } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger, SheetClose } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
+import type { Business } from "@/lib/types";
 
 const NAV_KEYS = [
   { key: "nav_services", href: "#services" },
@@ -16,7 +17,7 @@ const NAV_KEYS = [
   { key: "nav_reviews", href: "#reviews" },
 ] as const;
 
-export function Header({ onAdminClick }: { onAdminClick: () => void }) {
+export function Header({ onAdminClick, business }: { onAdminClick: () => void; business: Business | null }) {
   const lang = useLang((s) => s.lang);
   const setLang = useLang((s) => s.setLang);
   const [scrolled, setScrolled] = useState(false);
@@ -41,9 +42,13 @@ export function Header({ onAdminClick }: { onAdminClick: () => void }) {
       <div className="container mx-auto flex h-16 items-center justify-between px-4 sm:px-6">
         {/* Logo */}
         <a href="#top" className="flex items-center gap-2 group" aria-label="lavadoatp inicio">
-          <span className="flex size-9 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-md group-hover:scale-105 transition-transform">
-            <Droplets className="size-5" />
-          </span>
+          {business?.logoUrl ? (
+            <img src={business.logoUrl} alt="lavadoatp logo" className="size-10 rounded-lg object-cover shadow-md group-hover:scale-105 transition-transform" />
+          ) : (
+            <span className="flex size-9 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-md group-hover:scale-105 transition-transform">
+              <Droplets className="size-5" />
+            </span>
+          )}
           <span className="font-extrabold text-lg tracking-tight">
             lavado<span className="text-primary">atp</span>
           </span>

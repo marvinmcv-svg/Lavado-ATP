@@ -39,7 +39,7 @@ export function PublicSite({
   return (
     <div className="flex min-h-screen flex-col">
       <AnnouncementBar settings={settings} />
-      <Header onAdminClick={onAdminClick} />
+      <Header onAdminClick={onAdminClick} business={business} />
       <main className="flex-1">
         <Hero
           business={business}

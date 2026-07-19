@@ -216,3 +216,50 @@ Stage Summary:
 - All copy is editable: hero headline/subheadline/CTA (es/en), service names/descriptions (es/en), gallery captions (es/en), review text, customer notes, announcement bar, WhatsApp greeting, business hours, service-area zones, quote-tier config
 - Lint: clean. Dev server: stable while requests are active (sandbox OOM watchdog kills idle processes — known environment limitation)
 - Test data cleaned up. Only the hero video file remains in /public/uploads/.
+
+---
+Task ID: 8
+Agent: main (orchestrator)
+Task: Real brand colors + logo + WhatsApp widget + mobile hero fix + triple audit
+
+Work Log:
+- Searched web for lavadoatp brand info — found real WhatsApp number 67409051 (from Facebook/Instagram bio)
+- Used picnob.com to extract the real Instagram profile picture (150x150) — downloaded to /public/uploads/lavadoatp-logo.jpg
+- Used VLM to analyze the logo: house outline + pressure washing nozzle + water droplets + "LAVADO ATP" / "A TODA PRESION" text
+- Extracted real brand colors via VLM: Primary #2E5F8A (medium-dark blue), Secondary #4A90E2 (bright water blue)
+- Converted hex to OKLCH: primary=oklch(0.475 0.094 244.5), accent=oklch(0.651 0.15 250.2)
+- Updated globals.css :root + .dark themes to use real brand blues (replaced teal palette)
+- Updated DB: phone=+591 67409051, logoUrl=/uploads/lavadoatp-logo.jpg, brandColors={primary:#2E5F8A, secondary:#4A90E2}
+- Built proper WhatsApp chat widget (replaced simple bubble): floating button → opens WhatsApp-style chat panel with:
+  - Header (lavadoatp logo, online status, close button)
+  - Chat body with WhatsApp wallpaper pattern + incoming message bubble (greeting + timestamp + checkmarks)
+  - CTA bar with green "Chatear por WhatsApp" button → opens wa.me
+  - Pulse hint dot after 3s if user hasn't opened
+- Fixed mobile hero (user complaint: "title and subtitle takes over the screen"):
+  - Headline reduced from text-4xl to text-2xl on mobile (sm:text-5xl on desktop)
+  - Subheadline hidden on mobile (hidden sm:block)
+  - Badge hidden on mobile (hidden sm:inline-flex)
+  - Trust stats hidden on mobile (hidden sm:grid)
+  - Content moved to bottom (justify-end sm:justify-center)
+  - Padding reduced (pt-16 pb-10 on mobile vs pt-28 sm:pb-24 on desktop)
+  - Overlay lighter on mobile (from-black/80 via-black/20 to-black/30) so video shows through
+  - Result: video takes top 77% of mobile viewport, text only at bottom (h1=53px at y=648 of 844px)
+- Updated Header to use real logo image (business.logoUrl with Droplets fallback)
+- Updated Footer to use real logo image
+- Updated Admin Portal sidebar + mobile bar to use real logo image
+- Updated layout.tsx favicon to /uploads/lavadoatp-logo.jpg
+
+TRIPLE AUDIT (Agent Browser + VLM):
+- Round 1 (mobile 390x844): real logo in header ✅, real WhatsApp +591 67409051 in footer ✅, mobile video playing (720x1280, autoplay+muted+playsInline) ✅, h1 only 53px at y=648/844 ✅, WhatsApp widget button present ✅
+- Round 2 (WhatsApp chat widget): clicking floating button opens chat panel ✅, panel has header (lavadoatp logo + online status) ✅, greeting message bubble ✅, green CTA button ✅
+- Round 3 (desktop 1280x800): hero shows image (not video) ✅, h1 at 72px font-size ✅, subheadline visible ✅, trust stats grid visible ✅, services section ✅, before/after slider ✅, quote calculator ✅, Schema.org HomeAndConstructionBusiness ✅, WhatsApp links use wa.me/59167409051 ✅
+- Round 4 (admin all 10 modules): real logo in sidebar ✅, all 10 modules switch correctly (Dashboard→Servicios→Reservas→Clientes→Leads→Analítica→Editor→Reseñas→Personal→Configuración) ✅
+- Round 5 (settings): phone field shows real number +591 67409051 ✅, all settings sections present (WhatsApp/Business profile/Service area/Quote tiers/Localization/Tracking) ✅
+- VLM mobile hero verification: title readable and NOT covering video ✅, CTAs visible at bottom ✅, mobile hero clean and functional ✅
+- Browser console: 0 errors. Lint: 0 errors, 0 warnings.
+
+Stage Summary:
+- Real brand identity applied: logo (from Instagram), colors (#2E5F8A primary blue + #4A90E2 accent blue), WhatsApp number (+591 67409051)
+- Proper WhatsApp chat widget with chat-style popup (header + greeting bubble + CTA) — not just a floating bubble
+- Mobile hero fixed: video now occupies top 77% of viewport, compact text at bottom only
+- All 5 user requests completed and triple-verified

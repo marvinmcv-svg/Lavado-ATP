@@ -21,9 +21,13 @@ export function Footer({ business, settings }: { business: Business; settings: S
           {/* Brand */}
           <div>
             <div className="flex items-center gap-2 mb-3">
-              <span className="flex size-9 items-center justify-center rounded-xl bg-primary text-primary-foreground">
-                <Droplets className="size-5" />
-              </span>
+              {business.logoUrl ? (
+                <img src={business.logoUrl} alt="lavadoatp logo" className="size-10 rounded-lg object-cover" />
+              ) : (
+                <span className="flex size-9 items-center justify-center rounded-xl bg-primary text-primary-foreground">
+                  <Droplets className="size-5" />
+                </span>
+              )}
               <span className="font-extrabold text-lg">
                 lavado<span className="text-primary">atp</span>
               </span>

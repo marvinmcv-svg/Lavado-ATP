@@ -69,57 +69,57 @@ export function Hero({
             <div className="absolute inset-0 bg-gradient-to-br from-primary/90 to-primary/70" />
           </div>
         )}
-        {/* Overlays (always on top of whichever media is showing) */}
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/85 via-primary/55 to-black/60" />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
+        {/* Overlays — lighter on mobile so video is clearly visible, darker on desktop for text contrast */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-black/30 md:bg-gradient-to-br md:from-primary/85 md:via-primary/55 md:to-black/60" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent md:block hidden" />
       </div>
 
-      <div className="container mx-auto px-4 sm:px-6 pt-20 pb-16 sm:pt-28 sm:pb-24 lg:pt-36 lg:pb-32 min-h-[88vh] flex flex-col justify-center">
+      <div className="container mx-auto px-4 sm:px-6 pt-16 pb-10 sm:pt-28 sm:pb-24 lg:pt-36 lg:pb-32 min-h-[88vh] flex flex-col justify-end sm:justify-center">
         <div className="max-w-3xl animate-fade-up">
-          {/* Badge */}
-          <div className="inline-flex items-center gap-2 rounded-full bg-white/15 backdrop-blur-sm border border-white/25 px-3 py-1.5 text-xs font-medium text-white mb-6">
+          {/* Badge — hidden on mobile to save space for video */}
+          <div className="hidden sm:inline-flex items-center gap-2 rounded-full bg-white/15 backdrop-blur-sm border border-white/25 px-3 py-1.5 text-xs font-medium text-white mb-6">
             <span className="flex size-2 rounded-full bg-accent animate-pulse" />
             {lang === "en" ? "Professional pressure washing · Santa Cruz, Bolivia" : "Lavado a presión profesional · Santa Cruz, Bolivia"}
           </div>
 
-          {/* Headline */}
-          <h1 className="text-4xl sm:text-5xl lg:text-7xl font-black text-white leading-[1.05] tracking-tight drop-shadow-lg">
+          {/* Headline — smaller on mobile so video is visible */}
+          <h1 className="text-2xl sm:text-5xl lg:text-7xl font-black text-white leading-[1.1] sm:leading-[1.05] tracking-tight drop-shadow-lg">
             {headline}
           </h1>
 
-          {/* Subheadline */}
-          <p className="mt-5 text-lg sm:text-xl text-white/90 max-w-2xl leading-relaxed drop-shadow">
+          {/* Subheadline — hidden on mobile, shown on sm+ */}
+          <p className="hidden sm:block mt-5 text-lg lg:text-xl text-white/90 max-w-2xl leading-relaxed drop-shadow">
             {sub}
           </p>
 
           {/* CTAs */}
-          <div className="mt-8 flex flex-col sm:flex-row gap-3">
+          <div className="mt-4 sm:mt-8 flex flex-col sm:flex-row gap-2 sm:gap-3">
             {phone ? (
               <a
                 href={buildWhatsAppUrl(normalizePhone(phone), greeting ?? "")}
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={onCta}
-                className="inline-flex items-center justify-center gap-2 rounded-xl bg-accent text-accent-foreground px-6 py-4 text-base font-bold shadow-xl hover:bg-accent/90 hover:scale-[1.02] active:scale-95 transition-all"
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-accent text-accent-foreground px-5 py-3 sm:px-6 sm:py-4 text-sm sm:text-base font-bold shadow-xl hover:bg-accent/90 hover:scale-[1.02] active:scale-95 transition-all"
               >
-                <Droplets className="size-5" />
+                <Droplets className="size-4 sm:size-5" />
                 {cta}
               </a>
             ) : (
-              <a href="#quote" className="inline-flex items-center justify-center gap-2 rounded-xl bg-accent text-accent-foreground px-6 py-4 text-base font-bold shadow-xl hover:bg-accent/90 transition-all">
+              <a href="#quote" className="inline-flex items-center justify-center gap-2 rounded-xl bg-accent text-accent-foreground px-5 py-3 sm:px-6 sm:py-4 text-sm sm:text-base font-bold shadow-xl hover:bg-accent/90 transition-all">
                 {lang === "en" ? "Request a quote" : "Solicitar cotización"}
               </a>
             )}
             <a
               href="#services"
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-white/10 backdrop-blur-sm border border-white/30 text-white px-6 py-4 text-base font-semibold hover:bg-white/20 transition-all"
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-white/10 backdrop-blur-sm border border-white/30 text-white px-5 py-3 sm:px-6 sm:py-4 text-sm sm:text-base font-semibold hover:bg-white/20 transition-all"
             >
               {lang === "en" ? "View services" : "Ver servicios"}
             </a>
           </div>
 
-          {/* Trust stats */}
-          <div className="mt-12 grid grid-cols-3 gap-4 sm:gap-8 max-w-2xl">
+          {/* Trust stats — hidden on mobile, shown on sm+ */}
+          <div className="hidden sm:grid mt-12 grid-cols-3 gap-4 sm:gap-8 max-w-2xl">
             <div className="flex flex-col">
               <div className="flex items-center gap-1.5 text-accent">
                 <Zap className="size-5" />

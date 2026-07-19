@@ -20,7 +20,8 @@ export const metadata: Metadata = {
   keywords: ["lavado a presión", "pressure washing", "lavado de driveway", "Santa Cruz Bolivia", "lavadoatp"],
   authors: [{ name: "lavadoatp" }],
   icons: {
-    icon: "https://z-cdn.chatglm.cn/z-ai/static/logo.svg",
+    icon: "/uploads/lavadoatp-logo.jpg",
+    apple: "/uploads/lavadoatp-logo.jpg",
   },
   openGraph: {
     title: "lavadoatp — Lavado a presión profesional",
