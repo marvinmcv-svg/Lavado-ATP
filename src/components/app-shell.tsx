@@ -28,7 +28,13 @@ export function AppShell({ data }: { data: PublicData }) {
   }, []);
 
   if (view === "admin" && data.business) {
-    return <AdminPortal data={data} onExit={() => setView("public")} />;
+    return (
+      <>
+        {/* noindex for admin surfaces — prevents search engines from indexing admin content */}
+        <meta name="robots" content="noindex, nofollow" />
+        <AdminPortal data={data} onExit={() => setView("public")} />
+      </>
+    );
   }
 
   return (

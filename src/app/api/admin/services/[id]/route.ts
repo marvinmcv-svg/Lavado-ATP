@@ -1,4 +1,5 @@
 // PUT/DELETE /api/admin/services/[id]
+import { Prisma } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { getBusinessId, json } from "@/lib/api";
@@ -28,7 +29,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     },
   });
   await db.auditLog.create({
-    data: { businessId, actorName: "Admin", action: `Editó servicio "${updated.nameEs}"`, tableName: "services", recordId: id, newValue: updated as unknown as Record<string, unknown> },
+    data: { businessId, actorName: "Admin", action: `Editó servicio "${updated.nameEs}"`, tableName: "services", recordId: id, newValue: updated as unknown as Prisma.InputJsonValue },
   });
   return json(updated);
 }

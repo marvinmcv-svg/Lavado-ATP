@@ -2,6 +2,7 @@
 import { NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { getBusinessId, json } from "@/lib/api";
+import { reviewCreateSchema, validate } from "@/lib/validation";
 
 export async function GET() {
   const businessId = await getBusinessId();
@@ -16,9 +17,11 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   const businessId = await getBusinessId();
   if (!businessId) return json({ error: "not_configured" }, 404);
-  const body = await req.json();
-  const { reviewerName, starRating, reviewText, reviewDate, source, visibleOnSite } = body;
-  if (!reviewerName || !reviewText || starRating == null) return json({ error: "missing_fields" }, 400);
+  const raw = await req.json().catch(() => null);
+  if (!raw) return json({ error: "invalid_body" }, 400);
+  const result = validate(reviewCreateSchema, raw);
+  if (!result.success) return json({ error: "validation_error", detail: result.error }, 400);
+  const { reviewerName, starRating, reviewText, reviewDate, source, visibleOnSite } = result.data;
   const review = await db.review.create({
     data: {
       businessId,

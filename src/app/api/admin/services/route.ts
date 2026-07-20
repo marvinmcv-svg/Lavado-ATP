@@ -2,6 +2,7 @@
 import { NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { getBusinessId, json } from "@/lib/api";
+import { serviceCreateSchema, validate } from "@/lib/validation";
 
 export async function GET() {
   const businessId = await getBusinessId();
@@ -16,22 +17,27 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   const businessId = await getBusinessId();
   if (!businessId) return json({ error: "not_configured" }, 404);
-  const body = await req.json();
-  const { categoryId, nameEs, nameEn, descriptionEs, descriptionEn, priceType, price, currency, available, sortOrder, beforePhotoUrl, afterPhotoUrl } = body;
-  if (!categoryId || !nameEs || !nameEn) return json({ error: "missing_fields" }, 400);
+  const raw = await req.json().catch(() => null);
+  if (!raw) return json({ error: "invalid_body" }, 400);
+  const result = validate(serviceCreateSchema, raw);
+  if (!result.success) return json({ error: "validation_error", detail: result.error }, 400);
+  const { categoryId, nameEs, nameEn, descriptionEs, descriptionEn, priceType, price, currency, available, sortOrder, beforePhotoUrl, afterPhotoUrl } = result.data;
+  // Verify category exists for this business
+  const category = await db.serviceCategory.findFirst({ where: { id: categoryId, businessId } });
+  if (!category) return json({ error: "category_not_found" }, 400);
   const svc = await db.service.create({
     data: {
       businessId,
       categoryId,
       nameEs,
       nameEn,
-      descriptionEs: descriptionEs ?? "",
-      descriptionEn: descriptionEn ?? "",
-      priceType: priceType ?? "starting_at",
+      descriptionEs,
+      descriptionEn,
+      priceType,
       price: typeof price === "number" ? price : null,
-      currency: currency ?? "BOB",
-      available: available ?? true,
-      sortOrder: sortOrder ?? 0,
+      currency,
+      available,
+      sortOrder,
       beforePhotoUrl: beforePhotoUrl ?? null,
       afterPhotoUrl: afterPhotoUrl ?? null,
     },

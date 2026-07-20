@@ -2,6 +2,7 @@
 import { NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { getBusinessId, json } from "@/lib/api";
+import { bookingCreateSchema, validate } from "@/lib/validation";
 
 export async function GET(req: NextRequest) {
   const businessId = await getBusinessId();
@@ -25,9 +26,17 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   const businessId = await getBusinessId();
   if (!businessId) return json({ error: "not_configured" }, 404);
-  const body = await req.json();
-  const { customerName, customerPhone, serviceId, propertyAddress, propertySizeSqm, scheduledAt, crewAssigned, quotedAmount, specialRequests, zone, depositAmount } = body;
-  if (!customerName || !customerPhone || !scheduledAt) return json({ error: "missing_fields" }, 400);
+  const raw = await req.json().catch(() => null);
+  if (!raw) return json({ error: "invalid_body" }, 400);
+  const result = validate(bookingCreateSchema, raw);
+  if (!result.success) return json({ error: "validation_error", detail: result.error }, 400);
+  const { customerName, customerPhone, serviceId, propertyAddress, propertySizeSqm, scheduledAt, crewAssigned, quotedAmount, specialRequests, zone, depositAmount } = result.data;
+
+  // Validate date is parseable
+  const scheduledDate = new Date(scheduledAt);
+  if (isNaN(scheduledDate.getTime())) {
+    return json({ error: "validation_error", detail: "scheduledAt: invalid date" }, 400);
+  }
 
   // upsert customer by phone
   let customer = await db.customer.findFirst({ where: { businessId, phone: customerPhone } });
@@ -51,7 +60,7 @@ export async function POST(req: NextRequest) {
       serviceId: serviceId ?? null,
       propertyAddress: propertyAddress ?? "",
       propertySizeSqm: propertySizeSqm ?? null,
-      scheduledAt: new Date(scheduledAt),
+      scheduledAt: scheduledDate,
       status: "pending",
       crewAssigned: crewAssigned ?? null,
       quotedAmount: quotedAmount ?? null,

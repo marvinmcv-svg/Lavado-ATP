@@ -1,4 +1,5 @@
 // PUT /api/admin/bookings/[id] — status, crew, reschedule, deposit
+import { Prisma } from "@prisma/client";
 import { NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { getBusinessId, json } from "@/lib/api";
@@ -22,7 +23,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     },
   });
   await db.auditLog.create({
-    data: { businessId, actorName: "Admin", action: `Actualizó reserva #${id.slice(-6)} → ${updated.status}`, tableName: "bookings", recordId: id, oldValue: existing as unknown as Record<string, unknown>, newValue: updated as unknown as Record<string, unknown> },
+    data: { businessId, actorName: "Admin", action: `Actualizó reserva #${id.slice(-6)} → ${updated.status}`, tableName: "bookings", recordId: id, oldValue: existing as unknown as Prisma.InputJsonValue, newValue: updated as unknown as Prisma.InputJsonValue },
   });
   return json(updated);
 }
