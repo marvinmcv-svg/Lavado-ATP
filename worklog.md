@@ -263,3 +263,32 @@ Stage Summary:
 - Proper WhatsApp chat widget with chat-style popup (header + greeting bubble + CTA) — not just a floating bubble
 - Mobile hero fixed: video now occupies top 77% of viewport, compact text at bottom only
 - All 5 user requests completed and triple-verified
+
+---
+Task ID: animation-upgrade
+Agent: main
+Task: Premium animation upgrade — 5 site components (before-after, video-reels, quote-calculator, service-area, reviews)
+
+Work Log:
+- Read all reference files: globals.css (premium animation classes), use-reveal.ts (useReveal + useCountUp hooks), hero.tsx + services.tsx (already-upgraded style references)
+- Upgraded all 5 target components with Framer Motion + premium CSS classes:
+
+1. before-after.tsx — Framer Motion fade-up header with text-gradient title; animated slider handle with spring scale + glow-pulse when dragging; vertical line glow swaps to bright accent blue on drag; fade-in caption via AnimatePresence; section reveal with whileInView; 3 decorative floating gradient blobs (float-slow/medium/fast); slider container scale-in mount (0.96→1); thumbnails: staggered scale-in + spring layoutId active ring; pointer/keyboard accessibility preserved (role=slider, arrow keys, aria-*).
+
+2. video-reels.tsx — Staggered card reveal (opacity/y/scale + 0.1s delay); hover whileHover y:-6 scale:1.03 + premium-card glow overlay; animated play button: motion.span scale pulse (1→1.08→1) + bg-white/40 animate-ping ring on hover; section header fade-up + text-gradient; modal spring physics (AnimatePresence + type=spring stiffness:260 damping:24 mass:0.8); modal play icon spring scale-in + pulsing backdrop; mute hint now interactive button.
+
+3. quote-calculator.tsx — AnimatePresence mode=wait for step transitions (slide in/out from right/left); spring-physics step indicator (active circle bounces [1,1.15,1]; check icon spins in with spring); animated step-progress connector morph (width 0→100%); glow-pulse on result estimate card; animated count-up for price range via custom useAnimatedNumber hook (rAF-based, ease-out cubic, respects prefers-reduced-motion); hover effects on service buttons (whileHover scale:1.02 y:-2 + shine overlay + ArrowRight slide-in) and size buttons (whileHover scale:1.04 y:-3); WhatsApp confirm button uses btn-shine; all API calls + bilingual labels preserved.
+
+4. service-area.tsx — Framer Motion section header fade-up + text-gradient title; map card subtle scale-in mount (0.96→1); hours card fade-up (delay 0.2s); staggered zone list reveal (each zone slides in from left + spring CheckCircle2); animated Abierto/Cerrado badge: spring scale-in + pinging dot (1.5s) when open, emerald-600 background, static muted dot when closed; hours list rows stagger in with small left-slide; premium-card class on both cards; directions link uses link-underline animated underline; decorative blobs.
+
+5. reviews.tsx — Staggered card reveal (0.1s delay); 3D card tilt on hover (pointer-driven perspective(1000px) rotateX/Y, disabled on mobile via matchMedia); star rating pop-in animation (scale 0→1, rotate -45°→0° spring per star); average rating number with count-up (custom useAnimatedCount hook — no ref, triggered by Framer Motion onViewportEnter callback so decimal animates too); section header fade-up + text-gradient; Quote icon spins/springs in on each card; "Get your free quote" CTA uses btn-shine + spring hover; decorative blobs (amber + primary).
+
+Cross-cutting:
+- All animations use premium easing ease: [0.16, 1, 0.3, 1] (cubic-bezier)
+- All whileInView use viewport={{ once: true, margin: "-80px" }}
+- prefers-reduced-motion respected (rAF count-ups early-return with target value, no tilt on mobile)
+- Component signatures (props/exports) unchanged — no breaking changes to page composition
+- All API calls (/api/track, /api/leads) and bilingual lang === "en" ? ... : ... patterns preserved
+- Used CSS classes from globals.css: premium-card, glass, glass-dark, text-gradient, glow-pulse, float-slow/medium/fast, stat-glow, btn-shine, link-underline, card-3d, bg-water-texture, no-scrollbar
+
+Lint: Modified files (all 5) — 0 errors. Pre-existing lint errors in hero.tsx (lines 199, 200) and use-reveal.ts (line 56) were NOT touched per task constraints. Dev server: page renders successfully (HTTP 200, ~120ms), no runtime errors in dev.log.
