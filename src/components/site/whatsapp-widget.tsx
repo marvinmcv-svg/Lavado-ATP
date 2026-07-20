@@ -23,7 +23,7 @@ export function WhatsAppWidget({ business, settings }: { business: Business | nu
 
   const phone = business?.phone ?? null;
   const greeting = lang === "en" ? (settings?.whatsappGreetingEn ?? "Hi! How can we help?") : (settings?.whatsappGreetingEs ?? "Hola! ¿Cómo podemos ayudarte?");
-  const businessName = business?.name ?? "lavadoatp";
+  const businessName = business?.name ?? "Lavado ATP";
 
   const href = phone ? buildWhatsAppUrl(normalizePhone(phone), greeting) : "#";
   const disabled = !phone;

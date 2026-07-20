@@ -29,7 +29,7 @@ export function Footer({ business, settings }: { business: Business; settings: S
                 </span>
               )}
               <span className="font-extrabold text-lg">
-                lavado<span className="text-primary">atp</span>
+                Lavado <span className="text-primary">ATP</span>
               </span>
             </div>
             <p className="text-sm text-background/70 leading-relaxed">
@@ -102,7 +102,7 @@ export function Footer({ business, settings }: { business: Business; settings: S
         </div>
 
         <div className="mt-10 pt-6 border-t border-background/10 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-background/60">
-          <p>© {new Date().getFullYear()} lavadoatp. {t(lang, "footer_rights")}</p>
+          <p>© {new Date().getFullYear()} Lavado ATP. {t(lang, "footer_rights")}</p>
           <p className="flex items-center gap-1.5">
             <Clock className="size-3.5" />
             {lang === "en" ? "Santa Cruz de la Sierra, Bolivia" : "Santa Cruz de la Sierra, Bolivia"}

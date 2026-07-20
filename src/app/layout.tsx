@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "lavadoatp — Lavado a presión profesional en Santa Cruz",
+  title: "Lavado ATP — Lavado a presión profesional en Santa Cruz",
   description:
     "Lavado a presión profesional en Santa Cruz de la Sierra, Bolivia. Driveways, fachadas, techos, flotas comerciales. Cotización gratis por WhatsApp.",
   keywords: ["lavado a presión", "pressure washing", "lavado de driveway", "Santa Cruz Bolivia", "lavadoatp"],
@@ -24,7 +24,7 @@ export const metadata: Metadata = {
     apple: "/uploads/lavadoatp-logo.jpg",
   },
   openGraph: {
-    title: "lavadoatp — Lavado a presión profesional",
+    title: "Lavado ATP — Lavado a presión profesional",
     description: "Recupera el brillo de tu propiedad. Lavado a presión profesional en Santa Cruz, Bolivia.",
     type: "website",
     locale: "es_BO",

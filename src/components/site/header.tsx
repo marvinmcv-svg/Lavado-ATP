@@ -50,7 +50,7 @@ export function Header({ onAdminClick, business }: { onAdminClick: () => void; b
             </span>
           )}
           <span className="font-extrabold text-lg tracking-tight">
-            lavado<span className="text-primary">atp</span>
+            Lavado <span className="text-primary">ATP</span>
           </span>
         </a>
 

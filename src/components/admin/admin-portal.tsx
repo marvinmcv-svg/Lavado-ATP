@@ -72,7 +72,7 @@ export function AdminPortal({ data, onExit }: { data: PublicData; onExit: () => 
         )}
         <div className="flex flex-col leading-tight">
           <span className="font-extrabold text-base tracking-tight">
-            lavado<span className="text-primary">atp</span>
+            Lavado <span className="text-primary">ATP</span>
           </span>
           <span className="text-[11px] font-medium text-muted-foreground">{brand}</span>
         </div>
@@ -158,7 +158,7 @@ export function AdminPortal({ data, onExit }: { data: PublicData; onExit: () => 
               </span>
             )}
             <span className="font-extrabold text-sm tracking-tight">
-              lavado<span className="text-primary">atp</span>
+              Lavado <span className="text-primary">ATP</span>
             </span>
             <span className="text-xs text-muted-foreground hidden sm:inline">· {brand}</span>
           </div>
