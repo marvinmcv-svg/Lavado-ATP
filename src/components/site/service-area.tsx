@@ -36,11 +36,15 @@ export function ServiceArea({ business }: { business: Business }) {
 
   const area = business.serviceArea;
   const zones = area?.zones ?? [];
-  const mapSrc = business.lat && business.lng
-    ? `https://www.openstreetmap.org/export/embed.html?bbox=${business.lng! - 0.08}%2C${business.lat! - 0.06}%2C${business.lng! + 0.08}%2C${business.lat! + 0.06}&layer=mapnik&marker=${business.lat}%2C${business.lng}`
-    : "https://www.openstreetmap.org/export/embed.html?bbox=-63.25%2C-17.86%2C-63.10%2C-17.70&layer=mapnik&marker=-17.7833%2C-63.1821";
+  // Google Maps embed — no API key needed, uses the free embed endpoint
+  const mapQuery = business.address
+    ? encodeURIComponent(business.address)
+    : (business.lat && business.lng
+      ? `${business.lat},${business.lng}`
+      : "Santa Cruz de la Sierra, Bolivia");
+  const mapSrc = `https://maps.google.com/maps?q=${mapQuery}&z=14&output=embed`;
   const directionsUrl = business.address
-    ? `https://www.google.com/maps/?daddr=${encodeURIComponent(business.address)}`
+    ? `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(business.address)}`
     : "https://www.google.com/maps/place/Santa+Cruz+de+la+Sierra";
 
   return (

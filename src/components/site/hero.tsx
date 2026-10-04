@@ -1,8 +1,9 @@
 "use client";
-// Hero — premium animated version with parallax video, floating particles,
+// Hero — premium version with VIDEO ON ALL DEVICES (desktop + mobile),
+// before/after swipe reveal effect, parallax, floating particles,
 // animated text reveal, glow CTAs, and count-up stats.
 import { useEffect, useRef, useState } from "react";
-import { Droplets, Star, Clock, Zap, ChevronDown, Sparkles } from "lucide-react";
+import { Droplets, Star, Clock, Zap, ChevronDown, Sparkles, MoveHorizontal } from "lucide-react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { useLang } from "@/lib/i18n";
 import { buildWhatsAppUrl, normalizePhone } from "@/lib/whatsapp";
@@ -29,7 +30,10 @@ export function Hero({
 
   const heroVideoUrl = settings?.heroVideoUrl ?? null;
   const heroVideoPoster = settings?.heroVideoPosterUrl ?? heroImage;
-  const desktopImage = settings?.heroImageUrl ?? heroImage;
+  // "Before" image for the swipe effect — use the first before/after pair's "before" photo
+  const beforeImage = settings?.heroImageUrl ?? heroImage;
+  // "After" image — the video poster or hero image
+  const afterImage = heroVideoPoster ?? heroImage;
 
   const avgRating = reviews.length > 0 ? reviews.reduce((s, r) => s + r.starRating, 0) / reviews.length : 5;
 
@@ -40,13 +44,88 @@ export function Hero({
   const contentY = useTransform(scrollYProgress, [0, 1], ["0%", "50%"]);
   const contentOpacity = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
 
-  // Mouse parallax (desktop only)
+  // Before/After swipe state — animated auto-reveal on desktop
+  const [swipePos, setSwipePos] = useState(50);
+  const [autoSwipe, setAutoSwipe] = useState(true);
+  const swipeRef = useRef<HTMLDivElement>(null);
+  const dragging = useRef(false);
+
+  // Auto-animate the before/after swipe on desktop (loops left-right)
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (window.matchMedia("(max-width: 767px)").matches) return; // mobile: skip, show video only
+    if (!autoSwipe) return;
+
+    let direction = -1; // start shrinking the "before" so video shows
+    let pos = 60;
+    const interval = setInterval(() => {
+      if (dragging.current) return;
+      pos += direction * 0.3;
+      if (pos >= 65) direction = -1;
+      if (pos <= 15) direction = 1;
+      setSwipePos(pos);
+    }, 40);
+    return () => clearInterval(interval);
+  }, [autoSwipe]);
+
+  // Force video to play (browsers sometimes block autoplay until user interaction)
+  useEffect(() => {
+    if (!heroVideoUrl) return;
+    const tryPlay = () => {
+      document.querySelectorAll<HTMLVideoElement>("#top video").forEach((v) => {
+        v.play().catch(() => {});
+      });
+    };
+    tryPlay();
+    const t = setTimeout(tryPlay, 500);
+    const t2 = setTimeout(tryPlay, 2000);
+    // Also try on first user interaction
+    const onInteract = () => { tryPlay(); };
+    window.addEventListener("click", onInteract, { once: true });
+    window.addEventListener("touchstart", onInteract, { once: true });
+    return () => {
+      clearTimeout(t);
+      clearTimeout(t2);
+      window.removeEventListener("click", onInteract);
+      window.removeEventListener("touchstart", onInteract);
+    };
+  }, [heroVideoUrl]);
+
+  const setFromClientX = (clientX: number) => {
+    const el = swipeRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const pct = ((clientX - rect.left) / rect.width) * 100;
+    setSwipePos(Math.max(0, Math.min(100, pct)));
+  };
+
+  useEffect(() => {
+    const onMove = (e: PointerEvent) => {
+      if (!dragging.current) return;
+      setFromClientX(e.clientX);
+    };
+    const onUp = () => {
+      if (dragging.current) {
+        dragging.current = false;
+        // resume auto-swipe after 3s of no interaction
+        setTimeout(() => setAutoSwipe(true), 3000);
+      }
+    };
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+    return () => {
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+    };
+  }, []);
+
+  // Mouse parallax for desktop image
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   useEffect(() => {
     if (typeof window === "undefined") return;
-    if (window.matchMedia("(max-width: 768px)").matches) return;
+    if (window.matchMedia("(max-width: 767px)").matches) return;
     const onMove = (e: MouseEvent) => {
-      setMousePos({ x: (e.clientX / window.innerWidth - 0.5) * 20, y: (e.clientY / window.innerHeight - 0.5) * 20 });
+      setMousePos({ x: (e.clientX / window.innerWidth - 0.5) * 15, y: (e.clientY / window.innerHeight - 0.5) * 15 });
     };
     window.addEventListener("mousemove", onMove);
     return () => window.removeEventListener("mousemove", onMove);
@@ -58,7 +137,7 @@ export function Hero({
     fetch("/api/leads", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ source: "whatsapp_widget", message: "Clicked hero CTA" }) }).catch(() => {});
   };
 
-  // Animated stats — destructure to avoid ref-during-render lint error
+  // Animated stats
   const { count: jobsCount, ref: jobsRef } = useCountUp(500);
   const { count: ratingCount, ref: ratingRef } = useCountUp(Math.round(avgRating * 10));
 
@@ -66,34 +145,93 @@ export function Hero({
     <section ref={sectionRef} id="top" className="relative isolate overflow-hidden">
       {/* Background media with parallax */}
       <motion.div className="absolute inset-0 -z-10" style={{ y: videoY }}>
-        {/* Mobile: video */}
-        {heroVideoUrl && (
-          <video
-            className="absolute inset-0 size-full object-cover md:hidden"
-            autoPlay muted loop playsInline preload="metadata"
-            poster={heroVideoPoster ?? undefined}
-            aria-hidden="true"
-          >
-            <source src={heroVideoUrl} type="video/mp4" />
-          </video>
-        )}
-        {/* Desktop: image with mouse parallax */}
-        {desktopImage && (
+        {/* VIDEO PLAYS ON ALL DEVICES — mobile shows video full-bleed,
+            desktop shows before/after swipe effect with video as the "after" layer */}
+        {heroVideoUrl ? (
+          <>
+            {/* Mobile: video only — no poster, starts immediately */}
+            <video
+              className="absolute inset-0 size-full object-cover md:hidden"
+              autoPlay muted loop playsInline preload="auto"
+              aria-hidden="true"
+            >
+              <source src={heroVideoUrl} type="video/mp4" />
+            </video>
+
+            {/* Desktop: before/after swipe effect
+                "Before" layer = static image (dirty surface)
+                "After" layer = video (clean surface being washed) — clipped by swipePos */}
+            <div
+              ref={swipeRef}
+              className="absolute inset-0 hidden md:block"
+              onPointerDown={(e) => { dragging.current = true; setAutoSwipe(false); setFromClientX(e.clientX); }}
+              onKeyDown={(e) => {
+                if (e.key === "ArrowLeft") setSwipePos((p) => Math.max(0, p - 5));
+                if (e.key === "ArrowRight") setSwipePos((p) => Math.min(100, p + 5));
+              }}
+              tabIndex={0}
+              role="slider"
+              aria-valuenow={Math.round(swipePos)}
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-label="Arrastra para ver antes y después"
+              style={{ cursor: "ew-resize" }}
+            >
+              {/* After layer (video) — base, full width */}
+              <div className="absolute inset-0 overflow-hidden" style={{ transform: `translate(${mousePos.x}px, ${mousePos.y}px) scale(1.05)` }}>
+                <video
+                  className="size-full object-cover"
+                  autoPlay muted loop playsInline preload="auto"
+                  poster={heroVideoPoster ?? undefined}
+                  aria-hidden="true"
+                >
+                  <source src={heroVideoUrl} type="video/mp4" />
+                </video>
+              </div>
+              <span className="absolute top-4 right-4 rounded-md bg-black/60 text-white px-3 py-1.5 text-xs font-bold backdrop-blur-sm z-20">
+                {lang === "en" ? "AFTER" : "DESPUÉS"}
+              </span>
+
+              {/* Before layer (static image) — clipped to left portion */}
+              {beforeImage && (
+                <div className="absolute inset-0 overflow-hidden" style={{ width: `${swipePos}%` }}>
+                  <img
+                    src={beforeImage}
+                    alt={lang === "en" ? "Before" : "Antes"}
+                    className="absolute inset-0 h-full w-screen max-w-none object-cover"
+                    style={{ width: "100vw" }}
+                    draggable={false}
+                  />
+                  <span className="absolute top-4 left-4 rounded-md bg-black/60 text-white px-3 py-1.5 text-xs font-bold backdrop-blur-sm z-20">
+                    {lang === "en" ? "BEFORE" : "ANTES"}
+                  </span>
+                </div>
+              )}
+
+              {/* Swipe handle */}
+              <div className="absolute top-0 bottom-0 pointer-events-none z-30" style={{ left: `${swipePos}%`, transform: "translateX(-50%)" }}>
+                <div className="absolute inset-y-0 left-1/2 -translate-x-1/2 w-1 bg-white shadow-[0_0_12px_rgba(255,255,255,0.6)]" />
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 size-12 rounded-full bg-white shadow-xl flex items-center justify-center">
+                  <MoveHorizontal className="size-5 text-primary" />
+                </div>
+              </div>
+            </div>
+          </>
+        ) : desktopImage ? (
           <div
-            className={`absolute inset-0 ${heroVideoUrl ? "hidden md:block" : ""}`}
+            className="absolute inset-0"
             style={{ transform: `translate(${mousePos.x}px, ${mousePos.y}px) scale(1.05)` }}
           >
             <img src={desktopImage} alt="" className="size-full object-cover" fetchPriority="high" />
           </div>
-        )}
-        {!desktopImage && !heroVideoUrl && (
+        ) : (
           <div className="size-full animated-gradient">
             <div className="absolute inset-0 bg-gradient-to-br from-primary/90 to-primary/70" />
           </div>
         )}
         {/* Overlays */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-black/40 md:bg-gradient-to-br md:from-primary/80 md:via-primary/50 md:to-black/60" />
-        <div className="absolute inset-0 bg-gradient-to-r from-black/40 via-transparent to-transparent hidden md:block" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-black/40 md:bg-gradient-to-br md:from-black/50 md:via-black/30 md:to-black/70" />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/50 via-transparent to-transparent hidden md:block" />
       </motion.div>
 
       {/* Floating particles (decorative) */}
@@ -212,7 +350,7 @@ export function Hero({
             >
               <div className="flex items-center gap-1.5 text-accent">
                 <Star className="size-5 fill-accent" />
-                <span className="text-2xl sm:text-3xl font-black text-white stat-glow">
+                <span ref={ratingRef} className="text-2xl sm:text-3xl font-black text-white stat-glow">
                   {(ratingCount / 10).toFixed(1)}
                 </span>
               </div>
@@ -237,6 +375,19 @@ export function Hero({
           </div>
         </div>
       </motion.div>
+
+      {/* Swipe hint (desktop only) */}
+      {heroVideoUrl && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 2 }}
+          className="hidden md:flex absolute bottom-8 right-8 items-center gap-2 glass rounded-full px-4 py-2 text-xs text-white font-medium z-20"
+        >
+          <MoveHorizontal className="size-3.5" />
+          {lang === "en" ? "Drag to compare before / after" : "Arrastra para comparar antes / después"}
+        </motion.div>
+      )}
 
       {/* Animated scroll hint */}
       <motion.a

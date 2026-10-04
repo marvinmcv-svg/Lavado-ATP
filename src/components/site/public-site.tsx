@@ -49,7 +49,7 @@ export function PublicSite({
         />
         <Services business={business} categories={categories} services={services} />
         {pairs.length > 0 && <BeforeAfter pairs={pairs} />}
-        {reels.length > 0 && <VideoReels reels={reels} />}
+        {reels.length > 0 && <VideoReels reels={reels} settings={settings} />}
         <QuoteCalculator business={business} settings={settings} services={services} />
         <ServiceArea business={business} />
         {reviews.length > 0 && <Reviews reviews={reviews} average={reviewAverage} />}

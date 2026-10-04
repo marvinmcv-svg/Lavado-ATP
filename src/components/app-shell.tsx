@@ -1,9 +1,11 @@
 "use client";
 // App shell — toggles between public site and admin portal (single route).
+// Shows a water splash preloader on initial load.
 import { useEffect, useState } from "react";
 import { PublicSite } from "@/components/site/public-site";
 import { AdminPortal } from "@/components/admin/admin-portal";
 import { SchemaOrg } from "@/components/site/schema-org";
+import { Preloader } from "@/components/site/preloader";
 import { useLang } from "@/lib/i18n";
 import type { PublicData } from "@/lib/public-data";
 
@@ -39,6 +41,7 @@ export function AppShell({ data }: { data: PublicData }) {
 
   return (
     <>
+      <Preloader logoUrl={data.business?.logoUrl ?? null} />
       <SchemaOrg business={data.business!} settings={data.settings} reviews={data.reviews} />
       <PublicSite
         business={data.business!}

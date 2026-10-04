@@ -265,7 +265,30 @@ function HeroMediaEditor({
   onChange: (s: SiteSettings) => void;
   onSave: () => void;
 }) {
-  const upd = (patch: Partial<SiteSettings>) => onChange({ ...settings, ...patch });
+  const upd = (patch: Partial<SiteSettings>) => {
+    const next = { ...settings, ...patch };
+    onChange(next);
+    // Auto-save after upload — user doesn't need to click Save separately
+    if (patch.heroImageUrl !== undefined || patch.heroVideoUrl !== undefined || patch.heroVideoPosterUrl !== undefined) {
+      setTimeout(() => {
+        fetch("/api/admin/settings", {
+          method: "PUT",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({
+            settings: {
+              heroImageUrl: next.heroImageUrl || null,
+              heroVideoUrl: next.heroVideoUrl || null,
+              heroVideoPosterUrl: next.heroVideoPosterUrl || null,
+            },
+          }),
+        }).then(() => {
+          toast.success(lang === "en" ? "Media saved — landing page updated" : "Medios guardados — página actualizada");
+        }).catch(() => {
+          toast.error(lang === "en" ? "Save failed" : "Error al guardar");
+        });
+      }, 100);
+    }
+  };
 
   return (
     <div className="flex flex-col gap-4">
@@ -324,10 +347,26 @@ function HeroMediaEditor({
         </div>
       </div>
 
-      <Button onClick={onSave} disabled={saving} className="self-start">
-        {saving ? <Spinner className="mr-2" /> : <Save className="size-4" />}
-        {lang === "en" ? "Save hero media" : "Guardar medios del hero"}
-      </Button>
+      {/* Sticky save bar */}
+      <div className="sticky bottom-0 -mx-4 px-4 py-3 bg-background/95 backdrop-blur-sm border-t border-border flex items-center justify-between gap-3 z-10">
+        <p className="text-xs text-muted-foreground hidden sm:block">
+          {lang === "en" ? "Changes auto-save after upload. Click to save manual edits." : "Los cambios se guardan automáticamente tras subir. Clic para guardar ediciones manuales."}
+        </p>
+        <div className="flex gap-2 ml-auto">
+          <a
+            href="/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-border px-4 py-2 text-sm font-semibold hover:bg-accent/40 transition-colors"
+          >
+            {lang === "en" ? "View site" : "Ver sitio"}
+          </a>
+          <Button onClick={onSave} disabled={saving} className="btn-shine">
+            {saving ? <Spinner className="mr-2" /> : <Save className="size-4 mr-1" />}
+            {lang === "en" ? "Save hero media" : "Guardar medios del hero"}
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }
